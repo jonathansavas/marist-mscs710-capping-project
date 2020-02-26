@@ -1,4 +1,5 @@
 package edu.marist.mscs710.metricscollector;
 
-public class SourceCodeFile {
+public enum SystemType {
+  WINDOWS, LINUX
 }
