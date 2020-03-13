@@ -1,51 +1,52 @@
 package edu.marist.mscs710.metricscollector;
 
+import edu.marist.mscs710.metricscollector.data.NetworkData;
 import oshi.SystemInfo;
 import oshi.hardware.NetworkIF;
 
 import java.time.Instant;
 
 public class Network {
-  private static final int FIVE_MINUTES_IN_SEC = 300;
+  private static final int FIVE_MINUTES_IN_MILLIS = 300000;
   private NetworkIF[] networks;
   private LastNetworkValues[] lastValues;
-  private long lastCheckInSeconds;
+  private long lastCheckInMillis;
 
   public Network() {
     this.networks = new SystemInfo().getHardware().getNetworkIFs();
-    lastCheckInSeconds = Instant.now().getEpochSecond();
+    lastCheckInMillis = Instant.now().toEpochMilli();
     this.lastValues = new LastNetworkValues[networks.length];
 
     for (int i = 0; i < networks.length; i++) {
       lastValues[i] = new LastNetworkValues();
       lastValues[i].bytesSent = networks[i].getBytesSent();
       lastValues[i].bytesRecv = networks[i].getBytesRecv();
-      lastValues[i].secondsIdle = 0;
+      lastValues[i].millisIdle = 0;
     }
   }
 
-  public long[] getNetworkStatsSinceLastCheck() {
-    long[] networkStats = {0L, 0L, 0L, 0L};
+  public NetworkData getNetworkStatsSinceLastCheck() {
+    long[] netStats = {0L, 0L, 0L, 0L};
 
     updateNetworkIFs();
 
-    long curSeconds = Instant.now().getEpochSecond();
-    networkStats[3] = curSeconds - lastCheckInSeconds;
-    lastCheckInSeconds = curSeconds;
+    long curMillis = Instant.now().toEpochMilli();
+    netStats[3] = curMillis - lastCheckInMillis;
+    lastCheckInMillis = curMillis;
 
     for (int i = 0; i < networks.length; i++) {
-      if (lastValues[i].secondsIdle < FIVE_MINUTES_IN_SEC) {
+      if (lastValues[i].millisIdle < FIVE_MINUTES_IN_MILLIS) {
         if (networks[i].getBytesSent() != 0 || networks[i].getBytesRecv() != 0) {
-          networkStats[0] += networks[i].getBytesSent() - lastValues[i].bytesSent;
-          networkStats[1] += networks[i].getBytesRecv() - lastValues[i].bytesRecv;
-          networkStats[2] += networks[i].getSpeed();
+          netStats[0] += networks[i].getBytesSent() - lastValues[i].bytesSent;
+          netStats[1] += networks[i].getBytesRecv() - lastValues[i].bytesRecv;
+          netStats[2] += networks[i].getSpeed();
         }
       }
     }
 
     updateLastValues();
-    // {delta total bytes sent, delta total bytes recv, tot speed, delta seconds}
-    return networkStats;
+    // {delta total bytes sent, delta total bytes recv, tot speed, delta millis}
+    return new NetworkData(netStats[0], netStats[1], netStats[2], netStats[3]);
   }
 
   private void updateNetworkIFs() {
@@ -60,9 +61,9 @@ public class Network {
       long curBytesRecv = networks[i].getBytesRecv();
 
       if (curBytesSent == lastValues[i].bytesSent && curBytesRecv == lastValues[i].bytesRecv) {
-        lastValues[i].secondsIdle += Instant.now().getEpochSecond() - lastCheckInSeconds;
+        lastValues[i].millisIdle += Instant.now().toEpochMilli() - lastCheckInMillis;
       } else {
-        lastValues[i].secondsIdle = 0;
+        lastValues[i].millisIdle = 0;
         lastValues[i].bytesSent = curBytesSent;
         lastValues[i].bytesRecv = curBytesRecv;
       }
@@ -73,5 +74,5 @@ public class Network {
 class LastNetworkValues {
   long bytesSent;
   long bytesRecv;
-  long secondsIdle;
+  long millisIdle;
 }

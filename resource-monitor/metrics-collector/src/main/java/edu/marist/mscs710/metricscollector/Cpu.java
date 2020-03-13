@@ -1,10 +1,12 @@
 package edu.marist.mscs710.metricscollector;
 
+import edu.marist.mscs710.metricscollector.data.CpuData;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.Sensors;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.OptionalDouble;
 
@@ -15,6 +17,7 @@ public class Cpu {
   private long[][] prevProcTicks;
   private final boolean reportPhysicalCores;
   private final double cpuSpeed;
+  private long lastCheckInMillis;
 
   public Cpu(boolean reportPhysicalCores) {
     HardwareAbstractionLayer hardware = new SystemInfo().getHardware();
@@ -29,15 +32,26 @@ public class Cpu {
     this.cpuSpeed = Math.round(freq * 100.0 / ONE_GHZ) / 100.0;
 
     this.prevProcTicks = processor.getProcessorCpuLoadTicks();
+    this.lastCheckInMillis = Instant.now().toEpochMilli();
   }
 
-  public double[] getCpuCoreUsageSinceLastCheck() {
+  public CpuData getCpuData() {
+    double[] cpuCoreUsages = getCpuCoreUsageSinceLastCheck();
+
+    long curMillis = Instant.now().toEpochMilli();
+    long deltaMillis = curMillis - lastCheckInMillis;
+    lastCheckInMillis = curMillis;
+
+    return new CpuData(cpuCoreUsages, getTotalCpuUsage(cpuCoreUsages),
+                       getCpuTemp(), deltaMillis);
+  }
+
+  private double[] getCpuCoreUsageSinceLastCheck() {
     long[][] currentProcTicks = processor.getProcessorCpuLoadTicks();
     double[] logCoreUsages = processor.getProcessorCpuLoadBetweenTicks(prevProcTicks);
     prevProcTicks = currentProcTicks;
 
     // CPU % per core as double[] 0.0-1.0
-    // Client can get total cpu by taking the average of the array
     return reportPhysicalCores ? reduceToPhysicalCores(logCoreUsages) : logCoreUsages;
   }
 
