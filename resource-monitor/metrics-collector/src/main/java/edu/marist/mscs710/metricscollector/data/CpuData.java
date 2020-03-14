@@ -3,7 +3,7 @@ package edu.marist.mscs710.metricscollector.data;
 public class CpuData extends MetricData {
   private double[] cpuCoreUsages;
   private double totalCpuUsage;
-  private double cpuTemp;
+  private double cpuTemp; // degrees C
 
   public CpuData(double[] cpuCoreUsages, double totalCpuUsage, double cpuTemp, long deltaMillis) {
     this.cpuCoreUsages = cpuCoreUsages;

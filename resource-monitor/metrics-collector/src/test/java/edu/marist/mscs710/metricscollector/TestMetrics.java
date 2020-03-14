@@ -1,6 +1,8 @@
 package edu.marist.mscs710.metricscollector;
 
 import edu.marist.mscs710.metricscollector.data.NetworkData;
+import edu.marist.mscs710.metricscollector.system.Cpu;
+import edu.marist.mscs710.metricscollector.system.Network;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -10,8 +12,6 @@ import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 public class TestMetrics {
 
@@ -84,15 +84,5 @@ public class TestMetrics {
 
       Thread.sleep(2000);
     }
-  }
-
-  @Test
-  public void testConversion() {
-    long a = 1584123074465L;
-    long b = 1584123074464L;
-
-    System.out.println(Math.round(a / 100.0) * 100);
-    System.out.println(Math.round(b / 100.0) * 100);
-
   }
 }

@@ -1,4 +1,4 @@
-package edu.marist.mscs710.metricscollector;
+package edu.marist.mscs710.metricscollector.system;
 
 import edu.marist.mscs710.metricscollector.data.CpuData;
 import oshi.SystemInfo;

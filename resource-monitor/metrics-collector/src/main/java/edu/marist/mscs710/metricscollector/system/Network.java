@@ -1,4 +1,4 @@
-package edu.marist.mscs710.metricscollector;
+package edu.marist.mscs710.metricscollector.system;
 
 import edu.marist.mscs710.metricscollector.data.NetworkData;
 import oshi.SystemInfo;
@@ -69,10 +69,10 @@ public class Network {
       }
     }
   }
-}
 
-class LastNetworkValues {
-  long bytesSent;
-  long bytesRecv;
-  long millisIdle;
+  private static class LastNetworkValues {
+    long bytesSent;
+    long bytesRecv;
+    long millisIdle;
+  }
 }

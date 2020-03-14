@@ -1,4 +1,4 @@
-package edu.marist.mscs710.metricscollector;
+package edu.marist.mscs710.metricscollector.system;
 
 import oshi.SystemInfo;
 

@@ -2,7 +2,7 @@ package edu.marist.mscs710.metricscollector.data;
 
 public class MemoryData extends MetricData {
   private double memoryUtilization;
-  private long pageFaults;
+  private long pageFaults; // during time span delta millis
 
   public MemoryData(double memoryUtilization, long pageFaults, long deltaMillis) {
     this.memoryUtilization = memoryUtilization;
