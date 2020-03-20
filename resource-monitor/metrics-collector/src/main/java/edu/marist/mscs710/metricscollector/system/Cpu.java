@@ -43,7 +43,7 @@ public class Cpu {
     lastCheckInMillis = curMillis;
 
     return new CpuData(cpuCoreUsages, getTotalCpuUsage(cpuCoreUsages),
-                       getCpuTemp(), deltaMillis);
+                       getCpuTemp(), deltaMillis, curMillis);
   }
 
   private double[] getCpuCoreUsageSinceLastCheck() {

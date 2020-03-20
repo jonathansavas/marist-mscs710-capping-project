@@ -7,15 +7,15 @@ public class ProcessData extends MetricData {
   private String name;
   private long startTime; // Unix time millis
   private long upTime; // millis
-  private double cpuUsage;
-  private long memory; // bytes allocated to process and in RAM
-  private long bytesRead; // During delta millis
-  private long bytesWritten; // During delta millis
+  private double cpuUsage; // During previous delta millis
+  private long memory; // Total bytes allocated to process and in RAM
+  private long bytesRead; // During previous delta millis
+  private long bytesWritten; // During previous delta millis
   private Processes.PidState pidState;
 
   public ProcessData(int pid, String name, long startTime, long upTime,
                      double cpuUsage, long memory, long bytesRead, long bytesWritten,
-                     Processes.PidState pidState, long deltaMillis) {
+                     Processes.PidState pidState, long deltaMillis, long epochMillisTime) {
     this.pid = pid;
     this.name = name;
     this.startTime = startTime;
@@ -26,10 +26,11 @@ public class ProcessData extends MetricData {
     this.bytesWritten = bytesWritten;
     this.deltaMillis = deltaMillis;
     this.pidState = pidState;
+    this.epochMillisTime = epochMillisTime;
   }
 
-  public ProcessData(int pid) {
-    this(pid, "", -1, -1, -1, -1, -1, -1, Processes.PidState.ENDED, -1);
+  public ProcessData(int pid, String name, long epochMillisTime) {
+    this(pid, name, -1, -1, -1, -1, -1, -1, Processes.PidState.ENDED, -1, epochMillisTime);
   }
 
   public int getPid() {
@@ -66,5 +67,22 @@ public class ProcessData extends MetricData {
 
   public Processes.PidState getPidState() {
     return pidState;
+  }
+
+  @Override
+  public String toString() {
+    return "ProcessData{" +
+      "pid=" + pid +
+      ", name='" + name + '\'' +
+      ", startTime=" + startTime +
+      ", upTime=" + upTime +
+      ", cpuUsage=" + cpuUsage +
+      ", memory=" + memory +
+      ", bytesRead=" + bytesRead +
+      ", bytesWritten=" + bytesWritten +
+      ", pidState=" + pidState +
+      ", deltaMillis=" + deltaMillis +
+      ", epochMillisTime=" + epochMillisTime +
+      '}';
   }
 }

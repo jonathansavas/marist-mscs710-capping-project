@@ -11,16 +11,16 @@ public class Memory {
   private static final double ONE_GB = 1073741824.0;
   private GlobalMemory mem;
   private VirtualMemory vMem;
-  private final long TOTAL_MEM_BYTES;
-  private final double TOTAL_MEM_GB;
+  private final long totalMemBytes;
+  private final double totalMemGb;
   private long lastSwapPagesIn;
   private long lastCheckInMillis;
 
   public Memory() {
     this.mem = new SystemInfo().getHardware().getMemory();
     this.vMem = mem.getVirtualMemory();
-    this.TOTAL_MEM_BYTES = mem.getTotal();
-    this.TOTAL_MEM_GB = Math.round(10.0 * TOTAL_MEM_BYTES / ONE_GB) / 10.0;
+    this.totalMemBytes = mem.getTotal();
+    this.totalMemGb = Math.round(10.0 * totalMemBytes / ONE_GB) / 10.0;
     this.lastSwapPagesIn = vMem.getSwapPagesIn();
     this.lastCheckInMillis = Instant.now().toEpochMilli();
   }
@@ -32,11 +32,11 @@ public class Memory {
     long deltaMillis = curMillis - lastCheckInMillis;
     lastCheckInMillis = curMillis;
 
-    return new MemoryData(getMemoryUtilization(), pageFaults, deltaMillis);
+    return new MemoryData(getMemoryUtilization(), pageFaults, deltaMillis, curMillis);
   }
 
   public double getMemoryUtilization() {
-    return 1.0 - (double) mem.getAvailable() / TOTAL_MEM_BYTES; // 0.0-1.0
+    return 1.0 - (double) mem.getAvailable() / totalMemBytes; // 0.0-1.0
   }
 
   private long getPageFaultsSinceLastCheck() {
@@ -47,10 +47,10 @@ public class Memory {
   }
 
   public long getTotalMemoryInBytes() {
-    return TOTAL_MEM_BYTES;
+    return totalMemBytes;
   }
 
   public double getTotalMemoryInGb() {
-    return TOTAL_MEM_GB;
+    return totalMemGb;
   }
 }

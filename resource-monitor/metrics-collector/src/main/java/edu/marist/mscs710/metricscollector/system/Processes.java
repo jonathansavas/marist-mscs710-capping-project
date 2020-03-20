@@ -5,34 +5,20 @@ import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
+import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Processes {
   private final int numLogicalCores;
   private OperatingSystem os;
-  private Map<Integer, ProcessInfo> lastProcInfoCache;
-
-  private static class ProcessInfo {
-    int pid;
-    long startTime;
-    long upTime;
-    long bytesRead;
-    long bytesWritten;
-
-    public ProcessInfo(int pid, long startTime, long upTime, long bytesRead, long bytesWritten) {
-      this.pid = pid;
-      this.startTime = startTime;
-      this.upTime = upTime;
-      this.bytesRead = bytesRead;
-      this.bytesWritten = bytesWritten;
-    }
-  }
+  private Map<Integer, OSProcess> priorProcSnapshots;
 
   public enum PidState {
     NEW, // Pid is new since last update
     RUNNING, // Pid is same process as last update
-    RECYCLED, // Pid is a different process with the same pid as one in the last update, special case of NEW
+    RECYCLED, // Pid is a new process with the same pid as one in the last update
     ENDED // Pid has ended since the last update
   }
 
@@ -41,7 +27,7 @@ public class Processes {
     numLogicalCores = sys.getHardware().getProcessor().getLogicalProcessorCount();
     os = sys.getOperatingSystem();
 
-    updateProcessCache(getCurrentProcesses());
+    updateProcessSnapshots(getCurrentProcesses());
   }
 
   public List<ProcessData> getProcessData() {
@@ -55,11 +41,13 @@ public class Processes {
         dataList.add(pData);
     }
 
-    for (Integer endedPid : lastProcInfoCache.keySet()) {
-      dataList.add(new ProcessData(endedPid));
+    for (OSProcess endedProc : priorProcSnapshots.values()) {
+      dataList.add(new ProcessData(endedProc.getProcessID(),
+                                   endedProc.getName(),
+                                   Instant.now().toEpochMilli()));
     }
 
-    updateProcessCache(osProcesses);
+    updateProcessSnapshots(osProcesses);
 
     return dataList;
   }
@@ -68,43 +56,61 @@ public class Processes {
     if (p == null) return null;
 
     int pid = p.getProcessID();
-    ProcessInfo lastInfo = lastProcInfoCache.remove(pid);
+    OSProcess prior = priorProcSnapshots.remove(pid);
 
-    if (lastInfo != null) { // Recycled pid or already-running process
-      boolean recycled = isRecycledPid(lastInfo, p);
+    if (prior != null) { // Recycled pid or already-running process
+      boolean recycled = isRecycledPid(prior, p);
 
       if (!recycled)
-        p.setStartTime(lastInfo.startTime); // start time has +- 1 ms error between process updates, so update
+        p.setStartTime(prior.getStartTime()); // start time has +- 1 ms error between process updates, so update
                                             // this to always return original start time, this is RUNNING case
       return new ProcessData(
         pid,
         p.getName(),
-        recycled ? p.getStartTime() : lastInfo.startTime,
+        p.getStartTime(), // If not recycled, we have updated start time above, else start time of new (recycled) process
         p.getUpTime(),
-        p.calculateCpuPercent() / numLogicalCores,
+        getProcessCpuLoadBetweenChecks(prior, p) / numLogicalCores,
         p.getResidentSetSize(),
-        recycled ? p.getBytesRead() : p.getBytesRead() - lastInfo.bytesRead,
-        recycled ? p.getBytesWritten() : p.getBytesWritten() - lastInfo.bytesWritten,
+        recycled ? p.getBytesRead() : p.getBytesRead() - prior.getBytesRead(),
+        recycled ? p.getBytesWritten() : p.getBytesWritten() - prior.getBytesWritten(),
         recycled ? PidState.RECYCLED : PidState.RUNNING,
-        recycled ? p.getUpTime() : p.getUpTime() - lastInfo.upTime
+        recycled ? p.getUpTime() : p.getUpTime() - prior.getUpTime(),
+        p.getStartTime() + p.getUpTime()
       );
     } else { // New process
       return new ProcessData(pid,
         p.getName(),
         p.getStartTime(),
         p.getUpTime(),
-        p.calculateCpuPercent() / numLogicalCores,
+        getTotalCpuLoad(p) / numLogicalCores,
         p.getResidentSetSize(),
         p.getBytesRead(),
         p.getBytesWritten(),
         PidState.NEW,
-        p.getUpTime()
+        p.getUpTime(),
+        p.getStartTime() + p.getUpTime()
       );
     }
   }
 
-  private boolean isRecycledPid(ProcessInfo lastInfo, OSProcess p) {
-    return lastInfo.pid == p.getProcessID() && p.getStartTime() > lastInfo.startTime + 5;
+  private static boolean isRecycledPid(OSProcess prior, OSProcess p) {
+    return prior != null
+      && p != null
+      && prior.getProcessID() == p.getProcessID()
+      && p.getStartTime() > prior.getStartTime() + 5;
+  }
+
+  private static double getProcessCpuLoadBetweenChecks(OSProcess prior, OSProcess p) {
+    if (isRecycledPid(prior, p)) {
+      return getTotalCpuLoad(p);
+    } else {
+      return (p.getUserTime() - prior.getUserTime() + p.getKernelTime() - prior.getKernelTime())
+              / (double) (p.getUpTime() - prior.getUpTime());
+    }
+  }
+
+  private static double getTotalCpuLoad(OSProcess p) {
+    return p == null ? -1 : (p.getKernelTime() + p.getUserTime()) / (double) p.getUpTime();
   }
 
   private List<OSProcess> getCurrentProcesses() {
@@ -133,14 +139,9 @@ public class Processes {
     return processList;
   }
 
-  private void updateProcessCache(List<OSProcess> processes) {
-    lastProcInfoCache = processes.stream()
+  private void updateProcessSnapshots(List<OSProcess> processes) {
+    priorProcSnapshots = processes.stream()
       .filter(Objects::nonNull)
-      .collect(Collectors.toMap(OSProcess::getProcessID,
-        p -> new ProcessInfo(p.getProcessID(),
-          p.getStartTime(),
-          p.getUpTime(),
-          p.getBytesRead(),
-          p.getBytesWritten())));
+      .collect(Collectors.toMap(OSProcess::getProcessID, Function.identity()));
   }
 }

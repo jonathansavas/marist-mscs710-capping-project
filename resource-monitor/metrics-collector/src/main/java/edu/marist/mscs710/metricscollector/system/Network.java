@@ -25,28 +25,30 @@ public class Network {
     }
   }
 
-  public NetworkData getNetworkStatsSinceLastCheck() {
-    long[] netStats = {0L, 0L, 0L, 0L};
+  public NetworkData getNetworkData() {
+    long deltaBytesSent = 0;
+    long deltaBytesRecv = 0;
+    long totalActiveSpeed = 0;
 
     updateNetworkIFs();
 
     long curMillis = Instant.now().toEpochMilli();
-    netStats[3] = curMillis - lastCheckInMillis;
+    long deltaMillis = curMillis - lastCheckInMillis;
     lastCheckInMillis = curMillis;
 
     for (int i = 0; i < networks.length; i++) {
       if (lastValues[i].millisIdle < FIVE_MINUTES_IN_MILLIS) {
         if (networks[i].getBytesSent() != 0 || networks[i].getBytesRecv() != 0) {
-          netStats[0] += networks[i].getBytesSent() - lastValues[i].bytesSent;
-          netStats[1] += networks[i].getBytesRecv() - lastValues[i].bytesRecv;
-          netStats[2] += networks[i].getSpeed();
+          deltaBytesSent += networks[i].getBytesSent() - lastValues[i].bytesSent;
+          deltaBytesRecv += networks[i].getBytesRecv() - lastValues[i].bytesRecv;
+          totalActiveSpeed += networks[i].getSpeed();
         }
       }
     }
 
-    updateLastValues();
-    // {delta total bytes sent, delta total bytes recv, tot speed, delta millis}
-    return new NetworkData(netStats[0], netStats[1], netStats[2], netStats[3]);
+    updateLastValues(deltaMillis);
+
+    return new NetworkData(deltaBytesSent, deltaBytesRecv, totalActiveSpeed, deltaMillis, curMillis);
   }
 
   private void updateNetworkIFs() {
@@ -55,13 +57,13 @@ public class Network {
     }
   }
 
-  private void updateLastValues() {
+  private void updateLastValues(long deltaMillis) {
     for (int i = 0; i < networks.length; i++) {
       long curBytesSent = networks[i].getBytesSent();
       long curBytesRecv = networks[i].getBytesRecv();
 
       if (curBytesSent == lastValues[i].bytesSent && curBytesRecv == lastValues[i].bytesRecv) {
-        lastValues[i].millisIdle += Instant.now().toEpochMilli() - lastCheckInMillis;
+        lastValues[i].millisIdle += deltaMillis;
       } else {
         lastValues[i].millisIdle = 0;
         lastValues[i].bytesSent = curBytesSent;
