@@ -1,6 +1,8 @@
 package edu.marist.mscs710.metricscollector.data;
 
-public abstract class MetricData {
+import edu.marist.mscs710.metricscollector.MetricRecord;
+
+public abstract class MetricData implements MetricRecord {
   protected long deltaMillis;
   protected long epochMillisTime;
 

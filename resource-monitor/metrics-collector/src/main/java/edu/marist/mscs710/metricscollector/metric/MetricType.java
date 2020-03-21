@@ -1,4 +1,4 @@
-package edu.marist.mscs710.metricscollector;
+package edu.marist.mscs710.metricscollector.metric;
 
 public enum MetricType {
   CPU, CPU_CORE, MEMORY, NETWORK, PROCESSES,

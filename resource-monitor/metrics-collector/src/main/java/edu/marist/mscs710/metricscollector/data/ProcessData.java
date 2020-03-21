@@ -1,15 +1,24 @@
 package edu.marist.mscs710.metricscollector.data;
 
+import edu.marist.mscs710.metricscollector.metric.Fields;
+import edu.marist.mscs710.metricscollector.metric.Metric;
+import edu.marist.mscs710.metricscollector.metric.MetricType;
 import edu.marist.mscs710.metricscollector.system.Processes;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class ProcessData extends MetricData {
+  private static final long BYTES_PER_KB = 1024L;
   private int pid;
   private String name;
   private long startTime; // Unix time millis
   private long upTime; // millis
   private double cpuUsage; // During previous delta millis
   private long memory; // Total bytes allocated to process and in RAM
-  private long bytesRead; // During previous delta millis
+  private long bytesRead; // Bytes read from disk during previous delta millis
   private long bytesWritten; // During previous delta millis
   private Processes.PidState pidState;
 
@@ -84,5 +93,33 @@ public class ProcessData extends MetricData {
       ", deltaMillis=" + deltaMillis +
       ", epochMillisTime=" + epochMillisTime +
       '}';
+  }
+
+  private Map<String, Object> getProcessMap() {
+    boolean isEndedState = pidState == Processes.PidState.ENDED;
+
+    long kbMemory = isEndedState ? -1 : memory / BYTES_PER_KB;
+    double kbRead = isEndedState ? -1 : ((double) bytesRead) / deltaMillis;
+    double kbWritten = isEndedState ? -1 : ((double) bytesWritten) / deltaMillis;
+
+    return new HashMap<String, Object>() {
+      {
+        put(Fields.Processes.DATETIME.toString(), epochMillisTime);
+        put(Fields.Processes.PID.toString(), pid);
+        put(Fields.Processes.NAME.toString(), name);
+        put(Fields.Processes.START_TIME.toString(), startTime);
+        put(Fields.Processes.UPTIME.toString(), upTime);
+        put(Fields.Processes.CPU_USAGE.toString(), cpuUsage);
+        put(Fields.Processes.MEMORY.toString(), kbMemory);
+        put(Fields.Processes.KB_READ.toString(), kbRead);
+        put(Fields.Processes.KB_WRITTEN.toString(), kbWritten);
+        put(Fields.Processes.STATE.toString(), pidState.toString());
+      }
+    };
+  }
+
+  @Override
+  public List<Metric> toMetricRecords() {
+    return Collections.singletonList(new Metric(MetricType.PROCESSES, getProcessMap()));
   }
 }
