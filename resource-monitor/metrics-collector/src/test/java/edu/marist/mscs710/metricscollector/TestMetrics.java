@@ -30,7 +30,7 @@ public class TestMetrics {
 
     Thread.sleep(300);
 
-    double[] perCoreCpuUsages = cpu.getCpuData().getCpuCoreUsages();
+    double[] perCoreCpuUsages = cpu.getMetricData().get(0).getCpuCoreUsages();
 
     int numPhysCores = new SystemInfo().getHardware().getProcessor().getPhysicalProcessorCount();
 
@@ -47,7 +47,7 @@ public class TestMetrics {
 
     Thread.sleep(500);
 
-    MemoryData memData = memory.getMemoryData();
+    MemoryData memData = memory.getMetricData().get(0);
 
     Assert.assertTrue(memData.getMemoryUtilization() > 0 && memData.getMemoryUtilization() < 1.0);
     Assert.assertTrue(memData.getPageFaults() >= 0);
@@ -55,7 +55,7 @@ public class TestMetrics {
 
     Thread.sleep(500);
 
-    MemoryData newData = memory.getMemoryData();
+    MemoryData newData = memory.getMetricData().get(0);
 
     Assert.assertTrue(newData.getDeltaMillis() > 0);
     Assert.assertTrue(newData.getEpochMillisTime() > memData.getEpochMillisTime());
@@ -78,7 +78,7 @@ public class TestMetrics {
 
       System.out.println();
 
-      NetworkData netData = network.getNetworkData();
+      NetworkData netData = network.getMetricData().get(0);
 
       System.out.println(String.format("Bytes Sent: %s, bytes recv: %s, bit / s: %s, delta millis: %s",
         netData.getBytesSent(), netData.getBytesRecv(), netData.getSpeed(), netData.getDeltaMillis()));
@@ -130,7 +130,7 @@ public class TestMetrics {
       System.out.println("EpochMillis: " + Instant.now().toEpochMilli());
       System.out.println();
 
-      List<ProcessData> processDataList = processes.getProcessData();
+      List<ProcessData> processDataList = processes.getMetricData();
 
       System.out.println(processDataList.size());
 
@@ -146,7 +146,7 @@ public class TestMetrics {
     Processes processes = new Processes();
     Thread.sleep(1000);
 
-    List<ProcessData> pdl = processes.getProcessData();
+    List<ProcessData> pdl = processes.getMetricData();
 
     Assert.assertEquals(1.0, pdl.stream().mapToDouble(ProcessData::getCpuUsage).sum(), 0.05);
 
@@ -155,7 +155,7 @@ public class TestMetrics {
 
     Thread.sleep(2000);
 
-    pdl = processes.getProcessData();
+    pdl = processes.getMetricData();
     Assert.assertEquals(1.0, pdl.stream().mapToDouble(ProcessData::getCpuUsage).sum(), 0.05);
 
     for (ProcessData pd : pdl) {
