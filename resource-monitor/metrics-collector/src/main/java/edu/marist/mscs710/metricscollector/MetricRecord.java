@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface MetricRecord {
 
-  List<Metric> toMetricRecords();
+  List<? extends Metric> toMetricRecords();
 }

@@ -1,12 +1,15 @@
 package edu.marist.mscs710.metricscollector.system;
 
+import edu.marist.mscs710.metricscollector.MetricSource;
 import edu.marist.mscs710.metricscollector.data.NetworkData;
 import oshi.SystemInfo;
 import oshi.hardware.NetworkIF;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
-public class Network {
+public class Network implements MetricSource {
   private static final int FIVE_MINUTES_IN_MILLIS = 300000;
   private NetworkIF[] networks;
   private LastNetworkValues[] lastValues;
@@ -25,7 +28,8 @@ public class Network {
     }
   }
 
-  public NetworkData getNetworkData() {
+  @Override
+  public List<NetworkData> getMetricData() {
     long deltaBytesSent = 0;
     long deltaBytesRecv = 0;
     long totalActiveSpeed = 0;
@@ -48,7 +52,9 @@ public class Network {
 
     updateLastValues(deltaMillis);
 
-    return new NetworkData(deltaBytesSent, deltaBytesRecv, totalActiveSpeed, deltaMillis, curMillis);
+    return Collections.singletonList(
+      new NetworkData(deltaBytesSent, deltaBytesRecv, totalActiveSpeed, deltaMillis, curMillis)
+    );
   }
 
   private void updateNetworkIFs() {

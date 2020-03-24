@@ -1,13 +1,16 @@
 package edu.marist.mscs710.metricscollector.system;
 
+import edu.marist.mscs710.metricscollector.MetricSource;
 import edu.marist.mscs710.metricscollector.data.MemoryData;
 import oshi.SystemInfo;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.VirtualMemory;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
-public class Memory {
+public class Memory implements MetricSource {
   private static final double ONE_GB = 1073741824.0;
   private GlobalMemory mem;
   private VirtualMemory vMem;
@@ -25,14 +28,17 @@ public class Memory {
     this.lastCheckInMillis = Instant.now().toEpochMilli();
   }
 
-  public MemoryData getMemoryData() {
+  @Override
+  public List<MemoryData> getMetricData() {
     long pageFaults = getPageFaultsSinceLastCheck();
 
     long curMillis = Instant.now().toEpochMilli();
     long deltaMillis = curMillis - lastCheckInMillis;
     lastCheckInMillis = curMillis;
 
-    return new MemoryData(getMemoryUtilization(), pageFaults, deltaMillis, curMillis);
+    return Collections.singletonList(
+      new MemoryData(getMemoryUtilization(), pageFaults, deltaMillis, curMillis)
+    );
   }
 
   public double getMemoryUtilization() {

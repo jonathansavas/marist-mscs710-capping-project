@@ -1,5 +1,7 @@
 package edu.marist.mscs710.metricscollector.system;
 
+import edu.marist.mscs710.metricscollector.MetricSource;
+import edu.marist.mscs710.metricscollector.data.MetricData;
 import edu.marist.mscs710.metricscollector.data.ProcessData;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
@@ -10,7 +12,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Processes {
+public class Processes implements MetricSource {
   private final int numLogicalCores;
   private OperatingSystem os;
   private Map<Integer, OSProcess> priorProcSnapshots;
@@ -30,7 +32,8 @@ public class Processes {
     updateProcessSnapshots(getCurrentProcesses());
   }
 
-  public List<ProcessData> getProcessData() {
+  @Override
+  public List<ProcessData> getMetricData() {
     List<OSProcess> osProcesses = getCurrentProcesses();
     List<ProcessData> dataList = new ArrayList<>(osProcesses.size());
 

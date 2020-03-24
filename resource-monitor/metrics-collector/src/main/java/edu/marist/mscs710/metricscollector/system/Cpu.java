@@ -1,5 +1,6 @@
 package edu.marist.mscs710.metricscollector.system;
 
+import edu.marist.mscs710.metricscollector.MetricSource;
 import edu.marist.mscs710.metricscollector.data.CpuData;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
@@ -8,9 +9,11 @@ import oshi.hardware.Sensors;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.OptionalDouble;
 
-public class Cpu {
+public class Cpu implements MetricSource {
   private static final double ONE_GHZ = 1000000000.0;
   private CentralProcessor processor;
   private Sensors sensors;
@@ -35,15 +38,18 @@ public class Cpu {
     this.lastCheckInMillis = Instant.now().toEpochMilli();
   }
 
-  public CpuData getCpuData() {
+  @Override
+  public List<CpuData> getMetricData() {
     double[] cpuCoreUsages = getCpuCoreUsageSinceLastCheck();
 
     long curMillis = Instant.now().toEpochMilli();
     long deltaMillis = curMillis - lastCheckInMillis;
     lastCheckInMillis = curMillis;
 
-    return new CpuData(cpuCoreUsages, getTotalCpuUsage(cpuCoreUsages),
-                       getCpuTemp(), deltaMillis, curMillis);
+    return Collections.singletonList(
+      new CpuData(cpuCoreUsages, getTotalCpuUsage(cpuCoreUsages),
+        getCpuTemp(), deltaMillis, curMillis)
+    );
   }
 
   private double[] getCpuCoreUsageSinceLastCheck() {

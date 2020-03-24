@@ -1,12 +1,15 @@
 package edu.marist.mscs710.metricscollector.system;
 
+import edu.marist.mscs710.metricscollector.MetricSource;
 import edu.marist.mscs710.metricscollector.data.SystemData;
 import oshi.SystemInfo;
 import oshi.software.os.OperatingSystem;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
-public class SystemMetrics {
+public class SystemMetrics implements MetricSource {
   private OperatingSystem os;
   private long lastCheckInMillis;
 
@@ -15,12 +18,15 @@ public class SystemMetrics {
     lastCheckInMillis = Instant.now().toEpochMilli();
   }
 
-  public SystemData getSystemData() {
+  @Override
+  public List<SystemData> getMetricData() {
     long curMillis = Instant.now().toEpochMilli();
     long deltaMillis = curMillis - lastCheckInMillis;
     lastCheckInMillis = curMillis;
 
-    return new SystemData(getUpTime(), deltaMillis, curMillis);
+    return Collections.singletonList(
+      new SystemData(getUpTime(), deltaMillis, curMillis)
+    );
   }
 
   private long getUpTime() {
