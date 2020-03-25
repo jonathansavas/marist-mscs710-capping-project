@@ -18,4 +18,12 @@ public class Metric {
   public Map<String, Object> getMetricData() {
     return metricData;
   }
+
+  @Override
+  public String toString() {
+    return "Metric{" +
+      "metricType=" + metricType +
+      ", metricData=" + metricData +
+      '}';
+  }
 }

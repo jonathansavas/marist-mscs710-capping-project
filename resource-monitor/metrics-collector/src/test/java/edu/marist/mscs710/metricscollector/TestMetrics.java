@@ -137,6 +137,7 @@ public class TestMetrics {
       for (int i = 0; i < 10; i++) {
         System.out.println(processDataList.get(i).toString());
       }
+      System.out.println(processDataList.get(processDataList.size() - 1).toString());
       System.out.println();
     }
   }
