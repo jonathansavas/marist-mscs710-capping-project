@@ -11,14 +11,16 @@
 
     <artifactId>metrics-collector</artifactId>
 
-    <properties></properties>
+    <properties>
+        <oshi.version>4.5.0</oshi.version>
+    </properties>
 
     <dependencies>
         <!-- https://mvnrepository.com/artifact/com.github.oshi/oshi-core -->
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
-            <version>4.3.1</version>
+            <version>${oshi.version}</version>
         </dependency>
 
     </dependencies>

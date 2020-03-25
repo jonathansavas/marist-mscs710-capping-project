@@ -21,7 +21,7 @@ CREATE TABLE CPU_Core (
                              NOT NULL,
     Core_Id          INTEGER NOT NULL,
     Core_Utilization REAL    NOT NULL,
-    Core_Temp        INTEGER NOT NULL
+    Core_Temp        INTEGER NOT NULL -- No core temp
 );
 
 
@@ -59,8 +59,8 @@ CREATE TABLE Processess (
     Rec_Id       INTEGER PRIMARY KEY AUTOINCREMENT,
     PID          INTEGER NOT NULL,
     Process_Name TEXT    NOT NULL,
-    Start_Time   BIGINT  NOT NULL,
-    End_Time     BIGINT,
+    Start_Time   BIGINT  NOT NULL, -- OSHI start time given in millis, value returned has varied by +- 1
+    End_Time     BIGINT, -- Planning to make this uptime in millis instead
     metrics      BLOB    NOT NULL
 );
 
