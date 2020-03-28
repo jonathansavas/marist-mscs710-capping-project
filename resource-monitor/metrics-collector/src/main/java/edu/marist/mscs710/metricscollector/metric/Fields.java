@@ -1,59 +1,188 @@
 package edu.marist.mscs710.metricscollector.metric;
 
+/**
+ * Specifies fields for the <tt>metricData</tt> associated with a
+ * <tt>Metric</tt> object.
+ */
 public class Fields {
 
+  /**
+   * <tt>MetricType.CPU</tt> fields
+   */
   public enum Cpu {
-    DATETIME, // Unix Time in millis
+    /**
+     * Epoch milli timestamp of this snapshot of metric data
+     */
+    DATETIME,
+    /**
+     * Time covered by this snapshot
+     */
     DELTA_MILLIS,
-    TEMPERATURE, // Celsius
-    UTILIZATION // Pct utilization since last update
+    /**
+     * CPU temperature in degrees Celsius, 0.0 if not available
+     */
+    TEMPERATURE,
+    /**
+     * CPU utilization during this snapshot from 0.0-1.0
+     */
+    UTILIZATION
   }
 
+  /**
+   * <tt>MetricType.CPU_CORE</tt> fields
+   */
   public enum CpuCore {
-    DATETIME, // Unix Time in millis
+    /**
+     * Epoch milli timestamp of this snapshot of metric data
+     */
+    DATETIME,
+    /**
+     * Time covered by this snapshot
+     */
     DELTA_MILLIS,
+    /**
+     * The CPU core id
+     */
     CORE_ID,
-    CORE_UTILIZATION, // Pct utilization since last update
+    /**
+     * The CPU core utilization during this snapshot, from 0.0-1.0
+     */
+    CORE_UTILIZATION,
   }
 
+  /**
+   * <tt>MetricType.MEMORY</tt> fields
+   */
   public enum Memory {
-    DATETIME, // Unix Time in millis
+    /**
+     * Epoch milli timestamp of this snapshot of metric data
+     */
+    DATETIME,
+    /**
+     * Time covered by this snapshot
+     */
     DELTA_MILLIS,
-    UTILIZATION, // Pct of memory in use
-    PAGE_FAULTS // Page faults / sec since last update
+    /**
+     * Memory utilization from 0.0-1.0
+     */
+    UTILIZATION,
+    /**
+     * Number of page faults per second during this snapshot
+     */
+    PAGE_FAULTS
   }
 
+  /**
+   * <tt>MetricType.NETWORK</tt> fields
+   */
   public enum Network {
-    DATETIME, // Unix Time in millis
+    /**
+     * Epoch milli timestamp of this snapshot of metric data
+     */
+    DATETIME,
+    /**
+     * Time covered by this snapshot
+     */
     DELTA_MILLIS,
-    THROUGHPUT, // kb / s network capacity, sum over active networks since last update
-    SEND, // kb / s sent since last update
-    RECEIVE // kb / s received since last update
+    /**
+     * Kilobits per second network capacity, the sum over active networks during
+     * this snapshot. A network interface is considered inactive after five
+     * minutes of inactivity.
+     */
+    THROUGHPUT,
+    /**
+     * Kilobits per second sent during this snapshot
+     */
+    SEND,
+    /**
+     * Kilobits per second received during this snapshot
+     */
+    RECEIVE
   }
 
+  /**
+   * <tt>MetricType.PROCESSES</tt> fields
+   */
   public enum Processes {
-    DATETIME, // Unix Time in millis
+    /**
+     * Epoch milli timestamp of this snapshot of metric data
+     */
+    DATETIME,
+    /**
+     * Time covered by this snapshot
+     */
     DELTA_MILLIS,
+    /**
+     * Process id
+     */
     PID,
+    /**
+     * Process name
+     */
     NAME,
-    START_TIME, // Unix Time in millis
-    UPTIME, // Millis
-    CPU_USAGE, // Pct utilization since last update
-    MEMORY, // Total KB allocated to process and in RAM
-    KB_READ, // KB read from disk per second since last update
-    KB_WRITTEN, // KB written to disk per second since last update
-    STATE // Process State
+    /**
+     * Start time of process as epoch milli timestamp
+     */
+    START_TIME,
+    /**
+     * Time the process has been running in milliseconds
+     */
+    UPTIME,
+    /**
+     * CPU usage of the process during this snapshot
+     */
+    CPU_USAGE,
+    /**
+     * Number of kilobytes of memory allocated to this process and in RAM
+     */
+    MEMORY,
+    /**
+     * Kilobytes per second read from disk during this snapshot
+     */
+    KB_READ,
+    /**
+     * Kilobytes per second written to disk during this snapshot
+     */
+    KB_WRITTEN,
+    /**
+     * Process state
+     */
+    STATE
   }
 
+  /**
+   * <tt>MetricType.SYSTEM_METRICS</tt> fields
+   */
   public enum SystemMetrics {
-    DATETIME, // Unix Time in millis
-    UPTIME // Seconds since boot time
+    /**
+     * Epoch milli timestamp of this snapshot of metric data
+     */
+    DATETIME,
+    /**
+     * Number of seconds since system boot
+     */
+    UPTIME
   }
 
+  /**
+   * <tt>MetricType.SYSTEM_CONSTANTS</tt> fields
+   */
   public enum SystemConstants {
-    TOTAL_MEMORY, // GB
+    /**
+     * Total memory of the system in gigabytes
+     */
+    TOTAL_MEMORY,
+    /**
+     * Number of physical CPU cores of the system
+     */
     PHYSICAL_CORES,
+    /**
+     * Number of logical CPU cores of the system
+     */
     LOGICAL_CORES,
+    /**
+     * Processor speed in GHz
+     */
     CPU_SPEED // GHz
   }
 }

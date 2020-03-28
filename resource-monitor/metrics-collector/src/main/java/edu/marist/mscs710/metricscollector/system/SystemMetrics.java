@@ -9,10 +9,16 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents overall system metrics.
+ */
 public class SystemMetrics implements MetricSource {
   private OperatingSystem os;
   private long lastCheckInMillis;
 
+  /**
+   * Constructs a new <tt>SystemMetrics</tt>
+   */
   public SystemMetrics() {
     os = new SystemInfo().getOperatingSystem();
     lastCheckInMillis = Instant.now().toEpochMilli();

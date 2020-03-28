@@ -10,6 +10,10 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents the memory unit of an operating system. Produces metrics on demand,
+ * keeping the previous state of the memory.
+ */
 public class Memory implements MetricSource {
   private static final double ONE_GB = 1073741824.0;
   private GlobalMemory mem;
@@ -19,6 +23,9 @@ public class Memory implements MetricSource {
   private long lastSwapPagesIn;
   private long lastCheckInMillis;
 
+  /**
+   * Constructs a new <tt>Memory</tt>
+   */
   public Memory() {
     this.mem = new SystemInfo().getHardware().getMemory();
     this.vMem = mem.getVirtualMemory();
@@ -41,6 +48,10 @@ public class Memory implements MetricSource {
     );
   }
 
+  /**
+   * Gets the percent memory utilization, from 0.0-1.0
+   * @return memory utilization
+   */
   public double getMemoryUtilization() {
     return 1.0 - (double) mem.getAvailable() / totalMemBytes; // 0.0-1.0
   }
@@ -52,10 +63,18 @@ public class Memory implements MetricSource {
     return pageFaults;
   }
 
+  /**
+   * Gets the total memory of the system in bytes.
+   * @return total memory
+   */
   public long getTotalMemoryInBytes() {
     return totalMemBytes;
   }
 
+  /**
+   * Gets the total memory of the system in GB.
+   * @return total memory
+   */
   public double getTotalMemoryInGb() {
     return totalMemGb;
   }

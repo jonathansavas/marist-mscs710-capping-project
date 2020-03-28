@@ -6,18 +6,23 @@ import edu.marist.mscs710.metricscollector.data.MetricData;
 import edu.marist.mscs710.metricscollector.kafka.MetricSender;
 import edu.marist.mscs710.metricscollector.metric.Metric;
 import edu.marist.mscs710.metricscollector.system.*;
+import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+/**
+ * A <tt>MetricsProducer</tt> for operating system metrics. This process
+ * runs indefinitely, sending data to a configured Kafka cluster in
+ * (approximately) regular intervals.
+ */
 public class OSMetricsProducer implements MetricsProducer {
   private static final Logger LOGGER = LoggerFactory.getLogger(OSMetricsProducer.class);
 
@@ -28,24 +33,41 @@ public class OSMetricsProducer implements MetricsProducer {
 
   private AtomicInteger frequency;
   private AtomicLong nextProduceTime;
-  private AtomicBoolean running;
+  private AtomicBoolean collecting;
   private AtomicBoolean started;
 
   private List<MetricSource> metricSources;
   private MetricSender metricSender;
   private String topic;
 
+  private SystemConstants systemConstants;
 
+
+  /**
+   * Constructs a new <tt>OSMetricsProducer</tt> configured to a Kafka cluster.
+   * @param frequency number of seconds between metric collection, minimum five seconds
+   * @param kafkaBrokers list of Kafka brokers in form host:port
+   * @param topic topic to which to send metric data
+   */
   public OSMetricsProducer(int frequency, List<String> kafkaBrokers, String topic) {
     this.frequency = new AtomicInteger(Math.max(frequency, MINIMUM_FREQUENCY));
-    this.running = new AtomicBoolean(false);
+    this.collecting = new AtomicBoolean(false);
     this.nextProduceTime = new AtomicLong(-1L);
     this.started = new AtomicBoolean(false);
     this.metricSources = new ArrayList<>();
     this.metricSender = new MetricSender(kafkaBrokers);
     this.topic = topic;
+    this.systemConstants = new SystemConstants();
+
+    LOGGER.info("Initialized Metrics Producer with frequency {} seconds, waiting for start command", frequency);
   }
 
+  /**
+   * Constructus a new <tt>OSMetricsProducer</tt> configured to a Kafka cluster
+   * with default frequency of five seconds.
+   * @param kafkaBrokers list of Kafka brokers in form host:port
+   * @param topic topic to which to send metric data
+   */
   public OSMetricsProducer(List<String> kafkaBrokers, String topic) {
     this(DEFAULT_FREQUENCY, kafkaBrokers, topic);
   }
@@ -53,48 +75,71 @@ public class OSMetricsProducer implements MetricsProducer {
   @Override
   public boolean start() {
     if (started.get()) {
+      LOGGER.error("Attempted to start Metrics Producer that is already running");
       return false;
     } else {
+      LOGGER.info("Starting Metrics Producer process");
       addAllMetricSources();
       setNextProduceTime(frequency.get(), FROM_NOW);
       this.run();
       started.set(true);
+      LOGGER.info("Metrics Producer successfully started");
       return true;
     }
   }
 
   @Override
   public boolean pause(int seconds) {
-    if (!started.get() || seconds == 0 || nextProduceTime.get() < 0) return false;
-
-    if (seconds > 0)
+    if (!started.get()) {
+      LOGGER.error("Pause command failed, Metrics Producer is not yet started");
+      return false;
+    } else if (seconds == 0) {
+      LOGGER.error("Pause command failed, cannot pause for {} seconds", seconds);
+      return false;
+    } else if (nextProduceTime.get() < 0) {
+      LOGGER.error("Pause command failed, Metrics Producer is paused indefinitely");
+      return false;
+    } else if (seconds > 0) {
       setNextProduceTime(seconds, PLUS_NEXT);
-    else
+      LOGGER.info("Pausing metrics collection for {} seconds", seconds);
+      return true;
+    } else {
       pauseIndefinitely();
-    return true;
+      LOGGER.info("Pausing metrics collection until wakeup command is received");
+      return true;
+    }
   }
 
   @Override
   public boolean wakeup() {
-    if (!started.get() || frequency.get() >= 0) return false;
-
-    setNextProduceTime(frequency.get(), FROM_NOW);
-    return true;
+    if (!started.get()) {
+      LOGGER.error("Wakeup command failed, Metrics Producer not yet started");
+      return false;
+    } else if (frequency.get() >= 0) {
+      LOGGER.error("Wakeup command failed, Metrics Producer is running");
+      return false;
+    } else {
+      setNextProduceTime(frequency.get(), FROM_NOW);
+      LOGGER.info("Successful wakeup");
+      return true;
+    }
   }
 
   @Override
   public boolean setFrequency(int seconds) {
     if (seconds < MINIMUM_FREQUENCY) {
+      LOGGER.error("Attempt to set frequency below minimum frequency of {} seconds", MINIMUM_FREQUENCY);
       return false;
     } else {
       frequency.set(seconds);
+      LOGGER.info("Updated frequency to {} seconds", seconds);
       return true;
     }
   }
 
   @Override
   public void shutdown() {
-    running.set(false);
+    collecting.set(false);
   }
 
   @Override
@@ -113,19 +158,21 @@ public class OSMetricsProducer implements MetricsProducer {
   }
 
   private void run() {
-    running.set(true);
+    collecting.set(true);
+    sendSystemConstants();
     new Thread(this::produceMetrics).start();
   }
 
   private void produceMetrics() {
-    while (running.get()) {
+    LOGGER.info("Started metrics production thread");
+
+    while (collecting.get()) {
       long sleepTime;
-      while ((sleepTime = getSleepTime()) > 0) {
+      while (collecting.get() && (sleepTime = getSleepTime()) > 0) {
         try {
           Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
-          LOGGER.error(e.getMessage());
-          LOGGER.error(Arrays.toString(e.getStackTrace()));
+          LOGGER.error(LoggerUtils.getExceptionMessage(e));
           shutdown();
           return;
         }
@@ -145,6 +192,8 @@ public class OSMetricsProducer implements MetricsProducer {
 
       metricSender.flush();
     }
+
+    LOGGER.info("Shutting down metrics production thread");
   }
 
   private long getSleepTime() {
@@ -157,11 +206,12 @@ public class OSMetricsProducer implements MetricsProducer {
     else if (timeRemaining < 500)
       return timeRemaining - 50;
     else
-      return timeRemaining - 100;
+      return 1000;
   }
 
   private void addAllMetricSources() {
     if (!started.get()) {
+      LOGGER.info("Collection CPU, Memory, Network, System, and Processes metrics");
       metricSources.add(new Cpu(true));
       metricSources.add(new Memory());
       metricSources.add(new Network());
@@ -179,5 +229,11 @@ public class OSMetricsProducer implements MetricsProducer {
 
   private void pauseIndefinitely() {
     nextProduceTime.set(-1L);
+  }
+
+  private void sendSystemConstants() {
+    for (Metric systemConstantRecord : systemConstants.toMetricRecords()) {
+      metricSender.send(topic, systemConstantRecord);
+    }
   }
 }

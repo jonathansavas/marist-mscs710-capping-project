@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Holds a snapshot of Network data.
+ */
 public class NetworkData extends MetricData {
   private static final long BITS_PER_KILOBIT = 1000L;
   private static final int BITS_PER_BYTE = 8;
@@ -16,6 +19,14 @@ public class NetworkData extends MetricData {
   private long bytesRecv; // During delta millis
   private long speed; // Bits per second network capacity, sum over active network interfaces
 
+  /**
+   * Constructs a new <tt>NetworkData</tt> with the supplied metrics.
+   * @param bytesSent number of bytes sent during this snapshot
+   * @param bytesRecv number of bytes received during this snapshot
+   * @param speed total network capacity over active network interfaces in bits per second
+   * @param deltaMillis time covered by this snapshot
+   * @param epochMillisTime epoch milli timestamp of this snapshot
+   */
   public NetworkData(long bytesSent, long bytesRecv, long speed, long deltaMillis, long epochMillisTime) {
     this.bytesSent = bytesSent;
     this.bytesRecv = bytesRecv;
@@ -24,14 +35,27 @@ public class NetworkData extends MetricData {
     this.epochMillisTime = epochMillisTime;
   }
 
+  /**
+   * Gets the bytes sent during this snapshot
+   * @return number of bytes
+   */
   public long getBytesSent() {
     return bytesSent;
   }
 
+  /**
+   * Gets the bytes received during this snapshot
+   * @return number of bytes
+   */
   public long getBytesRecv() {
     return bytesRecv;
   }
 
+  /**
+   * Gets the total network capacity over active network interfaces in bits per second.
+   * A network interface is considered inactive after five minutes of inactivity.
+   * @return speed in bits per second
+   */
   public long getSpeed() {
     return speed;
   }

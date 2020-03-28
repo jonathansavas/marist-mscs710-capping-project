@@ -1,7 +1,6 @@
 package edu.marist.mscs710.metricscollector.system;
 
 import edu.marist.mscs710.metricscollector.MetricSource;
-import edu.marist.mscs710.metricscollector.data.MetricData;
 import edu.marist.mscs710.metricscollector.data.ProcessData;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
@@ -12,18 +11,43 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Represents the processes running on an operating system. Produces metrics
+ * on demand, keeping the previous state of the processes.
+ */
 public class Processes implements MetricSource {
   private final int numLogicalCores;
   private OperatingSystem os;
   private Map<Integer, OSProcess> priorProcSnapshots;
 
+  /**
+   * State of a process
+   */
   public enum PidState {
-    NEW, // Pid is new since last update
-    RUNNING, // Pid is same process as last update
-    RECYCLED, // Pid is a new process with the same pid as one in the last update
-    ENDED // Pid has ended since the last update
+    /**
+     * A process that has started since the last state update
+     */
+    NEW,
+    /**
+     * A process that was running during the last state update, and is
+     * currently running
+     */
+    RUNNING,
+    /**
+     * A process that has started since the last state update, but has the
+     * same process ID as a process that was seen during the last state update
+     */
+    RECYCLED,
+    /**
+     * A process that was running during the last state update, but has ended
+     * since then
+     */
+    ENDED
   }
 
+  /**
+   * Constructs a new <tt>Processes</tt>
+   */
   public Processes() {
     SystemInfo sys = new SystemInfo();
     numLogicalCores = sys.getHardware().getProcessor().getLogicalProcessorCount();

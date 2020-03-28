@@ -9,12 +9,19 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents the network interfaces of a system. Produces metrics on demand,
+ * keeping the previous state of the interfaces.
+ */
 public class Network implements MetricSource {
   private static final int FIVE_MINUTES_IN_MILLIS = 300000;
   private NetworkIF[] networks;
   private LastNetworkValues[] lastValues;
   private long lastCheckInMillis;
 
+  /**
+   * Constructs a new <tt>Network</tt>
+   */
   public Network() {
     this.networks = new SystemInfo().getHardware().getNetworkIFs();
     lastCheckInMillis = Instant.now().toEpochMilli();
