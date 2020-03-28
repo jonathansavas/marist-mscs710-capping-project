@@ -46,6 +46,7 @@ public class CpuData extends MetricData {
     return new HashMap<String, Object>() {
       {
         put(Fields.Cpu.DATETIME.toString(), epochMillisTime);
+        put(Fields.Cpu.DELTA_MILLIS.toString(), deltaMillis);
         put(Fields.Cpu.TEMPERATURE.toString(), cpuTemp);
         put(Fields.Cpu.UTILIZATION.toString(), totalCpuUsage);
       }
@@ -61,6 +62,7 @@ public class CpuData extends MetricData {
       coreMaps.add(new HashMap<String, Object>() {
         {
           put(Fields.CpuCore.DATETIME.toString(), epochMillisTime);
+          put(Fields.CpuCore.DELTA_MILLIS.toString(), deltaMillis);
           put(Fields.CpuCore.CORE_ID.toString(), coreId);
           put(Fields.CpuCore.CORE_UTILIZATION.toString(), cpuCoreUsages[coreId]);
         }

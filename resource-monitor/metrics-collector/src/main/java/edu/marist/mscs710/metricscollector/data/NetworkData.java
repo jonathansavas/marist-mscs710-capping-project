@@ -51,6 +51,7 @@ public class NetworkData extends MetricData {
     return new HashMap<String, Object>() {
       {
         put(Fields.Network.DATETIME.toString(), epochMillisTime);
+        put(Fields.Network.DELTA_MILLIS.toString(), deltaMillis);
         put(Fields.Network.THROUGHPUT.toString(), speed / BITS_PER_KILOBIT);
         put(Fields.Network.SEND.toString(), ((double) bytesSent) / deltaMillis * BITS_PER_BYTE);
         put(Fields.Network.RECEIVE.toString(), ((double) bytesRecv) / deltaMillis * BITS_PER_BYTE);

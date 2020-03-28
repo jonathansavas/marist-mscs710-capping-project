@@ -3,12 +3,15 @@ package edu.marist.mscs710.metricscollector.producer;
 import edu.marist.mscs710.metricscollector.MetricSource;
 import edu.marist.mscs710.metricscollector.MetricsProducer;
 import edu.marist.mscs710.metricscollector.data.MetricData;
+import edu.marist.mscs710.metricscollector.kafka.MetricSender;
 import edu.marist.mscs710.metricscollector.metric.Metric;
-import edu.marist.mscs710.metricscollector.metric.MetricType;
 import edu.marist.mscs710.metricscollector.system.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,6 +19,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class OSMetricsProducer implements MetricsProducer {
+  private static final Logger LOGGER = LoggerFactory.getLogger(OSMetricsProducer.class);
+
   private static final boolean FROM_NOW = true;
   private static final boolean PLUS_NEXT = false;
   private static final int MINIMUM_FREQUENCY = 5;
@@ -27,18 +32,22 @@ public class OSMetricsProducer implements MetricsProducer {
   private AtomicBoolean started;
 
   private List<MetricSource> metricSources;
+  private MetricSender metricSender;
+  private String topic;
 
 
-  public OSMetricsProducer(int frequency) {
+  public OSMetricsProducer(int frequency, List<String> kafkaBrokers, String topic) {
     this.frequency = new AtomicInteger(Math.max(frequency, MINIMUM_FREQUENCY));
     this.running = new AtomicBoolean(false);
     this.nextProduceTime = new AtomicLong(-1L);
     this.started = new AtomicBoolean(false);
     this.metricSources = new ArrayList<>();
+    this.metricSender = new MetricSender(kafkaBrokers);
+    this.topic = topic;
   }
 
-  public OSMetricsProducer() {
-    this(DEFAULT_FREQUENCY);
+  public OSMetricsProducer(List<String> kafkaBrokers, String topic) {
+    this(DEFAULT_FREQUENCY, kafkaBrokers, topic);
   }
 
   @Override
@@ -115,7 +124,10 @@ public class OSMetricsProducer implements MetricsProducer {
         try {
           Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
-          e.printStackTrace(); // TODO: what should we do here?
+          LOGGER.error(e.getMessage());
+          LOGGER.error(Arrays.toString(e.getStackTrace()));
+          shutdown();
+          return;
         }
       }
 
@@ -128,18 +140,10 @@ public class OSMetricsProducer implements MetricsProducer {
 
       for (MetricData metricData : metricDataList) {
         for (Metric metric : metricData.toMetricRecords())
-          sendToKafka(metric);
+          metricSender.send(topic, metric);
       }
 
-      System.out.println();
-    }
-  }
-
-  private void sendToKafka(Metric metric) {
-    if (metric.getMetricType() != MetricType.PROCESSES) {
-      System.out.println(Instant.now().toEpochMilli());
-      System.out.println(metric.toString());
-      System.out.println();
+      metricSender.flush();
     }
   }
 

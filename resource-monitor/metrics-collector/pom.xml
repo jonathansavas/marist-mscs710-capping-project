@@ -13,14 +13,44 @@
 
     <properties>
         <oshi.version>4.5.0</oshi.version>
+        <spring-kafka.version>2.4.4.RELEASE</spring-kafka.version>
+        <kafka-junit4.version>3.2.1</kafka-junit4.version>
+        <jackson-core.version>2.10.3</jackson-core.version>
     </properties>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/com.github.oshi/oshi-core -->
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
             <version>${oshi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>${spring-kafka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson-core.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.salesforce.kafka.test</groupId>
+            <artifactId>kafka-junit4</artifactId>
+            <version>${kafka-junit4.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_${kafka-scala.version}</artifactId>
+            <version>${kafka.version}</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

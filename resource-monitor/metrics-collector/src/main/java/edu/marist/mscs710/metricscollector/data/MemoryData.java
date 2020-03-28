@@ -42,6 +42,7 @@ public class MemoryData extends MetricData {
     return new HashMap<String, Object>() {
       {
         put(Fields.Memory.DATETIME.toString(), epochMillisTime);
+        put(Fields.Memory.DELTA_MILLIS.toString(), deltaMillis);
         put(Fields.Memory.UTILIZATION.toString(), memoryUtilization);
         put(Fields.Memory.PAGE_FAULTS.toString(), ((double) pageFaults) / deltaMillis * 1000.0);
       }

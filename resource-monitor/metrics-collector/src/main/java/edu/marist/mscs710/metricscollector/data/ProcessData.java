@@ -105,6 +105,7 @@ public class ProcessData extends MetricData {
     return new HashMap<String, Object>() {
       {
         put(Fields.Processes.DATETIME.toString(), epochMillisTime);
+        put(Fields.Processes.DELTA_MILLIS.toString(), deltaMillis);
         put(Fields.Processes.PID.toString(), pid);
         put(Fields.Processes.NAME.toString(), name);
         put(Fields.Processes.START_TIME.toString(), startTime);

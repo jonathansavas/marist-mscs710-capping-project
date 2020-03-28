@@ -4,24 +4,28 @@ public class Fields {
 
   public enum Cpu {
     DATETIME, // Unix Time in millis
+    DELTA_MILLIS,
     TEMPERATURE, // Celsius
     UTILIZATION // Pct utilization since last update
   }
 
   public enum CpuCore {
     DATETIME, // Unix Time in millis
+    DELTA_MILLIS,
     CORE_ID,
     CORE_UTILIZATION, // Pct utilization since last update
   }
 
   public enum Memory {
     DATETIME, // Unix Time in millis
+    DELTA_MILLIS,
     UTILIZATION, // Pct of memory in use
     PAGE_FAULTS // Page faults / sec since last update
   }
 
   public enum Network {
     DATETIME, // Unix Time in millis
+    DELTA_MILLIS,
     THROUGHPUT, // kb / s network capacity, sum over active networks since last update
     SEND, // kb / s sent since last update
     RECEIVE // kb / s received since last update
@@ -29,6 +33,7 @@ public class Fields {
 
   public enum Processes {
     DATETIME, // Unix Time in millis
+    DELTA_MILLIS,
     PID,
     NAME,
     START_TIME, // Unix Time in millis
