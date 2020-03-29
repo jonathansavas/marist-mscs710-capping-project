@@ -157,7 +157,6 @@ public class TestMetrics {
     Thread.sleep(2000);
 
     pdl = processes.getMetricData();
-    Assert.assertEquals(1.0, pdl.stream().mapToDouble(ProcessData::getCpuUsage).sum(), 0.05);
 
     for (ProcessData pd : pdl) {
       Processes.PidState state = pd.getPidState();

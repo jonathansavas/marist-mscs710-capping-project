@@ -18,6 +18,7 @@ Thumbs.db
 *.cache
 *.ilk
 *.log
+*.log.*
 *.lib
 *.sbr
 bin/*
