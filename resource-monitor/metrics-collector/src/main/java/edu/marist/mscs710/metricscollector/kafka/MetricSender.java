@@ -15,6 +15,7 @@ public class MetricSender {
   /**
    * Constructs a new <tt>MetricSender</tt> configured to send messages to
    * the supplied Kafka brokers.
+   *
    * @param kafkaBrokers list of Kafka brokers, in the form host:port
    */
   public MetricSender(List<String> kafkaBrokers) {
@@ -23,7 +24,8 @@ public class MetricSender {
 
   /**
    * Sends a <tt>Metric</tt> message to the specified topic
-   * @param topic topic to which to send messages
+   *
+   * @param topic  topic to which to send messages
    * @param metric data to send
    */
   public void send(String topic, Metric metric) {
@@ -32,8 +34,9 @@ public class MetricSender {
 
   /**
    * Sends a <tt>Metric</tt> message to the specified topic with a given key.
-   * @param topic topic to which to send messages
-   * @param key key for the message
+   *
+   * @param topic  topic to which to send messages
+   * @param key    key for the message
    * @param metric data to send
    */
   public void send(String topic, String key, Metric metric) {
@@ -45,5 +48,13 @@ public class MetricSender {
    */
   public void flush() {
     kafkaTemplate.flush();
+  }
+
+  /**
+   * Closes the producer.
+   */
+  public void close() {
+    kafkaTemplate.flush();
+    kafkaTemplate.getProducerFactory().reset();
   }
 }

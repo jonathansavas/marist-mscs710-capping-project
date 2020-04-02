@@ -17,10 +17,11 @@ public class CpuData extends MetricData {
 
   /**
    * Constructs a new <tt>CpuData</tt> with the supplied metrics.
-   * @param cpuCoreUsages array of doubles representing CPU usages during this snapshot
-   * @param totalCpuUsage overall CPU usage during this snapshot
-   * @param cpuTemp cpu temperature in degrees Celsius
-   * @param deltaMillis time covered by this snapshot
+   *
+   * @param cpuCoreUsages   array of doubles representing CPU usages during this snapshot
+   * @param totalCpuUsage   overall CPU usage during this snapshot
+   * @param cpuTemp         cpu temperature in degrees Celsius
+   * @param deltaMillis     time covered by this snapshot
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
   public CpuData(double[] cpuCoreUsages, double totalCpuUsage, double cpuTemp, long deltaMillis, long epochMillisTime) {
@@ -33,6 +34,7 @@ public class CpuData extends MetricData {
 
   /**
    * Gets the array of CPU core usages. ID is given by array index.
+   *
    * @return double[] of cpu core usages
    */
   public double[] getCpuCoreUsages() {
@@ -41,6 +43,7 @@ public class CpuData extends MetricData {
 
   /**
    * Gets the overall CPU usage.
+   *
    * @return overall CPU usage
    */
   public double getTotalCpuUsage() {
@@ -49,6 +52,7 @@ public class CpuData extends MetricData {
 
   /**
    * Gets the CPU temperature.
+   *
    * @return CPU temperature in degrees Celsius, at epochMillisTime,
    * or 0.0 if unavailable
    */

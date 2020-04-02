@@ -28,6 +28,7 @@ public class Cpu implements MetricSource {
 
   /**
    * Constructs a new <tt>Cpu</tt>.
+   *
    * @param reportPhysicalCores attempts to reduce CPU core usage metrics
    *                            to physical cores rather than logical cores. If
    *                            logical cores = physical cores * 2, passing <tt>true</tt>
@@ -74,6 +75,7 @@ public class Cpu implements MetricSource {
 
   /**
    * Static method to reduce per core usage data to total CPU usage.
+   *
    * @param perCoreUsages array of CPU core usages
    * @return total CPU usage
    */
@@ -84,6 +86,7 @@ public class Cpu implements MetricSource {
 
   /**
    * Gets the CPU temperature in degrees Celsius, or 0.0 if unavailable.
+   *
    * @return CPU temperature
    */
   public double getCpuTemp() {
@@ -92,6 +95,7 @@ public class Cpu implements MetricSource {
 
   /**
    * Gets the speed in GHz of the processor.
+   *
    * @return processor speed
    */
   public double getCpuSpeed() {

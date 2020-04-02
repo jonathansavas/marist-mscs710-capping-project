@@ -13,6 +13,7 @@ public interface MetricRecord {
 
   /**
    * Extracts metric data in a generic format.
+   *
    * @return list of generic <tt>Metric</tt> objects
    */
   List<? extends Metric> toMetricRecords();

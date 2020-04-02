@@ -7,7 +7,10 @@ import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -69,9 +72,10 @@ public class Processes implements MetricSource {
     }
 
     for (OSProcess endedProc : priorProcSnapshots.values()) {
-      dataList.add(new ProcessData(endedProc.getProcessID(),
-                                   endedProc.getName(),
-                                   Instant.now().toEpochMilli()));
+      dataList.add(new ProcessData(
+        endedProc.getProcessID(),
+        endedProc.getName(),
+        Instant.now().toEpochMilli()));
     }
 
     updateProcessSnapshots(osProcesses);
@@ -132,7 +136,7 @@ public class Processes implements MetricSource {
       return getTotalCpuLoad(p);
     } else {
       return (p.getUserTime() - prior.getUserTime() + p.getKernelTime() - prior.getKernelTime())
-              / (double) (p.getUpTime() - prior.getUpTime());
+        / (double) (p.getUpTime() - prior.getUpTime());
     }
   }
 

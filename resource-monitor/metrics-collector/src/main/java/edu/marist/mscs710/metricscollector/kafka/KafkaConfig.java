@@ -60,6 +60,7 @@ public class KafkaConfig {
   /**
    * Creates Kafka template configured to produce <tt>Metric</tt> messages to
    * the given list of Kafka brokers.
+   *
    * @param kafkaBrokers List of Kafka broker connection strings, in the form
    *                     of host:port
    * @return Kafka template configured to send <tt>Metric</tt> messages with
@@ -70,7 +71,7 @@ public class KafkaConfig {
   }
 
   private static Map<String, Object> createConsumerProps(List<String> kafkaBrokers, String consumerGroup,
-                                                        OffsetResetPolicy resetPolicy) {
+                                                         OffsetResetPolicy resetPolicy) {
     Map<String, Object> props = new HashMap<>();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, String.join(",", kafkaBrokers));
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -88,34 +89,36 @@ public class KafkaConfig {
   /**
    * Creates a Kafka message listener with <tt>OffsetResetPolicy.EARLIEST</tt> and
    * idle between polls of 500 ms.
-   * @param kafkaBrokers list of Kafka brokers
+   *
+   * @param kafkaBrokers  list of Kafka brokers
    * @param consumerGroup consumer group
-   * @param topic topic from which to consume messages
-   * @param dataConsumer <tt>Consumer</tt> functional interface, called on a
-   *                     successful receive of a message
+   * @param topic         topic from which to consume messages
+   * @param dataConsumer  <tt>Consumer</tt> functional interface, called on a
+   *                      successful receive of a message
    * @return Kafka message listener
    */
   public static KafkaMessageListenerContainer<String, Metric> createListener(List<String> kafkaBrokers, String consumerGroup, String topic,
-                                                                           Consumer<ConsumerRecord<String, Metric>> dataConsumer) {
+                                                                             Consumer<ConsumerRecord<String, Metric>> dataConsumer) {
     return KafkaConfig.createListener(kafkaBrokers, consumerGroup, DEFAULT_OFFSET_RESET_POLICY,
       topic, DEFAULT_IDLE_BETWEEN_POLLS, dataConsumer);
   }
 
   /**
    * Creates a Kafka message listener with the supplied parameters.
-   * @param kafkaBrokers list of Kafka brokers
-   * @param consumerGroup consumer group
-   * @param resetPolicy consumer  auto offset reset policy
-   * @param topic topic from which to consume messages
+   *
+   * @param kafkaBrokers     list of Kafka brokers
+   * @param consumerGroup    consumer group
+   * @param resetPolicy      consumer  auto offset reset policy
+   * @param topic            topic from which to consume messages
    * @param idleBetweenPolls number of milliseconds to wait between polls to get
    *                         messages from Kafka
-   * @param dataConsumer <tt>Consumer</tt> functional interface, called on a
-   *    *                     successful receive of a message
+   * @param dataConsumer     <tt>Consumer</tt> functional interface, called on a
+   *                         *                     successful receive of a message
    * @return Kafka message listener
    */
   public static KafkaMessageListenerContainer<String, Metric> createListener(List<String> kafkaBrokers, String consumerGroup,
-                                                                           OffsetResetPolicy resetPolicy, String topic, long idleBetweenPolls,
-                                                                           Consumer<ConsumerRecord<String, Metric>> dataConsumer) {
+                                                                             OffsetResetPolicy resetPolicy, String topic, long idleBetweenPolls,
+                                                                             Consumer<ConsumerRecord<String, Metric>> dataConsumer) {
     ContainerProperties containerProps = new ContainerProperties(topic);
     containerProps.setAckMode(ContainerProperties.AckMode.RECORD);
     containerProps.setMessageListener((MessageListener<String, Metric>) dataConsumer::accept);

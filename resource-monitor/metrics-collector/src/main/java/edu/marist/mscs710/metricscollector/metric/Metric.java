@@ -15,6 +15,7 @@ public class Metric {
 
   /**
    * Constructs a new <tt>Metric</tt> with the supplied metrics.
+   *
    * @param metricType type of the metric
    * @param metricData map of metric data
    */
@@ -27,6 +28,7 @@ public class Metric {
 
   /**
    * Gets the metric type.
+   *
    * @return metric type
    */
   public MetricType getMetricType() {
@@ -35,6 +37,7 @@ public class Metric {
 
   /**
    * Gets the metric data.
+   *
    * @return metric data
    */
   public Map<String, Object> getMetricData() {

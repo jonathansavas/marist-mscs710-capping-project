@@ -39,6 +39,7 @@ public class SystemConstants implements MetricRecord {
 
   /**
    * Gets the total memory of the system, in bytes.
+   *
    * @return total memory
    */
   public static long getTotalMemBytes() {
@@ -47,6 +48,7 @@ public class SystemConstants implements MetricRecord {
 
   /**
    * Gets the total memory of the system, in gigabytes.
+   *
    * @return total memory
    */
   public static double getTotalMemGb() {
@@ -55,6 +57,7 @@ public class SystemConstants implements MetricRecord {
 
   /**
    * Gets the number of physical cores of the system.
+   *
    * @return number of physical cores
    */
   public static int getPhysicalCores() {
@@ -63,6 +66,7 @@ public class SystemConstants implements MetricRecord {
 
   /**
    * Gets the number of logical cores of the system.
+   *
    * @return number of logical cores
    */
   public static int getLogicalCores() {
@@ -71,6 +75,7 @@ public class SystemConstants implements MetricRecord {
 
   /**
    * Gets the processor speed in GHz.
+   *
    * @return processor speed
    */
   public static double getCpuSpeed() {

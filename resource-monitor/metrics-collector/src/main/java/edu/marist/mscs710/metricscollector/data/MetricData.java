@@ -11,6 +11,7 @@ public abstract class MetricData implements MetricRecord {
 
   /**
    * Gets time in milliseconds covered by this snapshot.
+   *
    * @return number of milliseconds
    */
   public long getDeltaMillis() {
@@ -19,6 +20,7 @@ public abstract class MetricData implements MetricRecord {
 
   /**
    * Gets the time epoch milli timestamp of this snapshot.
+   *
    * @return epoch milli timestamp
    */
   public long getEpochMillisTime() {

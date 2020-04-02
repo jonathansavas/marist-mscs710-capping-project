@@ -27,16 +27,17 @@ public class ProcessData extends MetricData {
 
   /**
    * Constructs a new <tt>ProcessData</tt> with the supplied metrics.
-   * @param pid process id
-   * @param name name of the process
-   * @param startTime start time of process as epoch milli timestamp
-   * @param upTime number of milliseconds the process has been running
-   * @param cpuUsage cpu usage of the process during this snapshot
-   * @param memory total bytes allocated to this process and in RAM
-   * @param bytesRead total bytes read from disk during this snapshot
-   * @param bytesWritten total bytes written to disk during this snapshot
-   * @param pidState state of the process
-   * @param deltaMillis time covered by this snapshot
+   *
+   * @param pid             process id
+   * @param name            name of the process
+   * @param startTime       start time of process as epoch milli timestamp
+   * @param upTime          number of milliseconds the process has been running
+   * @param cpuUsage        cpu usage of the process during this snapshot
+   * @param memory          total bytes allocated to this process and in RAM
+   * @param bytesRead       total bytes read from disk during this snapshot
+   * @param bytesWritten    total bytes written to disk during this snapshot
+   * @param pidState        state of the process
+   * @param deltaMillis     time covered by this snapshot
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
   public ProcessData(int pid, String name, long startTime, long upTime,
@@ -57,8 +58,9 @@ public class ProcessData extends MetricData {
 
   /**
    * Constructs a new <tt>ProcessData</tt> with state <tt>Processes.PidState.ENDED</tt>
-   * @param pid process id
-   * @param name name of the process
+   *
+   * @param pid             process id
+   * @param name            name of the process
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
   public ProcessData(int pid, String name, long epochMillisTime) {
@@ -67,6 +69,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets the process id.
+   *
    * @return process id
    */
   public int getPid() {
@@ -75,6 +78,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets the process name.
+   *
    * @return process name
    */
   public String getName() {
@@ -83,6 +87,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets the process start time as epoch milli timestamp.
+   *
    * @return start time
    */
   public long getStartTime() {
@@ -91,6 +96,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets number of milliseconds the process has been running.
+   *
    * @return milliseconds of uptime
    */
   public long getUpTime() {
@@ -99,6 +105,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets the cpu usage of the process during this snapshot.
+   *
    * @return cpu usage
    */
   public double getCpuUsage() {
@@ -107,6 +114,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets the total number of bytes allocated to this process and in RAM
+   *
    * @return bytes of memory
    */
   public long getMemory() {
@@ -115,6 +123,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets the total number of bytes read from disk during this snapshot.
+   *
    * @return bytes read
    */
   public long getBytesRead() {
@@ -123,6 +132,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets the total number of bytes written to disk during this snapshot.
+   *
    * @return bytes read
    */
   public long getBytesWritten() {
@@ -131,6 +141,7 @@ public class ProcessData extends MetricData {
 
   /**
    * Gets the state of the process.
+   *
    * @return process state
    */
   public Processes.PidState getPidState() {

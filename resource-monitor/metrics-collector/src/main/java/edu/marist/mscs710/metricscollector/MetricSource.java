@@ -13,6 +13,7 @@ public interface MetricSource {
   /**
    * Gets metric data from a system. The data returned is a snapshot of data
    * aggregated since the last time this method was called.
+   *
    * @return list of <tt>MetricData</tt> objects
    */
   List<? extends MetricData> getMetricData();

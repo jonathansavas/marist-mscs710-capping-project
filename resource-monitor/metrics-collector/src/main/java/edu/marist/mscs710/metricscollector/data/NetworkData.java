@@ -21,10 +21,11 @@ public class NetworkData extends MetricData {
 
   /**
    * Constructs a new <tt>NetworkData</tt> with the supplied metrics.
-   * @param bytesSent number of bytes sent during this snapshot
-   * @param bytesRecv number of bytes received during this snapshot
-   * @param speed total network capacity over active network interfaces in bits per second
-   * @param deltaMillis time covered by this snapshot
+   *
+   * @param bytesSent       number of bytes sent during this snapshot
+   * @param bytesRecv       number of bytes received during this snapshot
+   * @param speed           total network capacity over active network interfaces in bits per second
+   * @param deltaMillis     time covered by this snapshot
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
   public NetworkData(long bytesSent, long bytesRecv, long speed, long deltaMillis, long epochMillisTime) {
@@ -37,6 +38,7 @@ public class NetworkData extends MetricData {
 
   /**
    * Gets the bytes sent during this snapshot
+   *
    * @return number of bytes
    */
   public long getBytesSent() {
@@ -45,6 +47,7 @@ public class NetworkData extends MetricData {
 
   /**
    * Gets the bytes received during this snapshot
+   *
    * @return number of bytes
    */
   public long getBytesRecv() {
@@ -54,6 +57,7 @@ public class NetworkData extends MetricData {
   /**
    * Gets the total network capacity over active network interfaces in bits per second.
    * A network interface is considered inactive after five minutes of inactivity.
+   *
    * @return speed in bits per second
    */
   public long getSpeed() {

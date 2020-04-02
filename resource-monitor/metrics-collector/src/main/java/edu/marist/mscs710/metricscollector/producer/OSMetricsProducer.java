@@ -41,13 +41,15 @@ public class OSMetricsProducer implements MetricsProducer {
   private String topic;
 
   private SystemConstants systemConstants;
+  private Thread collectorThread;
 
 
   /**
    * Constructs a new <tt>OSMetricsProducer</tt> configured to a Kafka cluster.
-   * @param frequency number of seconds between metric collection, minimum five seconds
+   *
+   * @param frequency    number of seconds between metric collection, minimum five seconds
    * @param kafkaBrokers list of Kafka brokers in form host:port
-   * @param topic topic to which to send metric data
+   * @param topic        topic to which to send metric data
    */
   public OSMetricsProducer(int frequency, List<String> kafkaBrokers, String topic) {
     this.frequency = new AtomicInteger(Math.max(frequency, MINIMUM_FREQUENCY));
@@ -63,10 +65,11 @@ public class OSMetricsProducer implements MetricsProducer {
   }
 
   /**
-   * Constructus a new <tt>OSMetricsProducer</tt> configured to a Kafka cluster
+   * Constructs a new <tt>OSMetricsProducer</tt> configured to a Kafka cluster
    * with default frequency of five seconds.
+   *
    * @param kafkaBrokers list of Kafka brokers in form host:port
-   * @param topic topic to which to send metric data
+   * @param topic        topic to which to send metric data
    */
   public OSMetricsProducer(List<String> kafkaBrokers, String topic) {
     this(DEFAULT_FREQUENCY, kafkaBrokers, topic);
@@ -138,8 +141,20 @@ public class OSMetricsProducer implements MetricsProducer {
   }
 
   @Override
-  public void shutdown() {
-    collecting.set(false);
+  public boolean shutdown() {
+    if (!started.get()) {
+      LOGGER.error("Shutdown command failed, Metrics Producer not yet started");
+      return false;
+    } else {
+      collecting.set(false);
+      try {
+        collectorThread.join();
+      } catch (InterruptedException e) {
+        LOGGER.error(LoggerUtils.getExceptionMessage(e));
+      }
+      metricSender.close();
+      return true;
+    }
   }
 
   @Override
@@ -160,7 +175,8 @@ public class OSMetricsProducer implements MetricsProducer {
   private void run() {
     collecting.set(true);
     sendSystemConstants();
-    new Thread(this::produceMetrics).start();
+    collectorThread = new Thread(this::produceMetrics);
+    collectorThread.start();
   }
 
   private void produceMetrics() {
@@ -173,7 +189,6 @@ public class OSMetricsProducer implements MetricsProducer {
           Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
           LOGGER.error(LoggerUtils.getExceptionMessage(e));
-          shutdown();
           return;
         }
       }

@@ -14,7 +14,7 @@ public class KafkaUtilsTest {
 
   @Test
   public void testMetricSerializerDeserializer() {
-    Metric before = new Metric(MetricType.SYSTEM_METRICS, new HashMap<String, Object>(){{
+    Metric before = new Metric(MetricType.SYSTEM_METRICS, new HashMap<String, Object>() {{
       put(Fields.SystemMetrics.UPTIME.toString(), 999999);
       put(Fields.SystemMetrics.DATETIME.toString(), 111111);
     }});

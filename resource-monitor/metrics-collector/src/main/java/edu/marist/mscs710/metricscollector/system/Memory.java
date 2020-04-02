@@ -50,6 +50,7 @@ public class Memory implements MetricSource {
 
   /**
    * Gets the percent memory utilization, from 0.0-1.0
+   *
    * @return memory utilization
    */
   public double getMemoryUtilization() {
@@ -65,6 +66,7 @@ public class Memory implements MetricSource {
 
   /**
    * Gets the total memory of the system in bytes.
+   *
    * @return total memory
    */
   public long getTotalMemoryInBytes() {
@@ -73,6 +75,7 @@ public class Memory implements MetricSource {
 
   /**
    * Gets the total memory of the system in GB.
+   *
    * @return total memory
    */
   public double getTotalMemoryInGb() {

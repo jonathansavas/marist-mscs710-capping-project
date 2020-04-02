@@ -14,12 +14,11 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
@@ -39,7 +38,7 @@ public class KafkaTest {
 
   @Test
   public void testMetricSerializerDeserializerViaKafka() {
-    Metric before = new Metric(MetricType.SYSTEM_METRICS, new HashMap<String, Object>(){{
+    Metric before = new Metric(MetricType.SYSTEM_METRICS, new HashMap<String, Object>() {{
       put(Fields.SystemMetrics.UPTIME.toString(), 999999);
       put(Fields.SystemMetrics.DATETIME.toString(), 111111);
     }});
@@ -101,8 +100,10 @@ public class KafkaTest {
     try {
       os.start();
       listener.start();
-      long endTime = Instant.now().toEpochMilli() + 1000 * 15;
-      while (Instant.now().toEpochMilli() < endTime) {Thread.sleep(1000);}
+      long endTime = Instant.now().toEpochMilli() + 1000 * 10;
+      while (Instant.now().toEpochMilli() < endTime) {
+        Thread.sleep(1000);
+      }
     } finally {
       os.shutdown();
       Thread.sleep(1000);
@@ -121,6 +122,28 @@ public class KafkaTest {
         Assert.assertTrue(fields.contains(field));
       }
     }
+  }
+
+  @Test
+  @Ignore
+  public void entryPointTest() throws InterruptedException {
+    String runFile = "src/test/runfile.tmp";
+    System.setProperty("runfile", runFile);
+    System.setProperty("kafkabroker", kafka.getKafkaConnectString());
+
+    Thread collectorThread = new Thread(() -> {
+      try {
+        MetricsCollectorStarter.main(new String[0]);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
+
+    collectorThread.start();
+
+    Thread.sleep(15000);
+    new File(runFile).delete();
+    collectorThread.join();
   }
 
 

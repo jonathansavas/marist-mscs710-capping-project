@@ -17,8 +17,9 @@ public class SystemData extends MetricData {
 
   /**
    * Constructs a new <tt>SystemData</tt> with the supplied metrics.
-   * @param upTime number of seconds since system boot
-   * @param deltaMillis time covered by this snapshot
+   *
+   * @param upTime          number of seconds since system boot
+   * @param deltaMillis     time covered by this snapshot
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
   public SystemData(long upTime, long deltaMillis, long epochMillisTime) {
@@ -29,6 +30,7 @@ public class SystemData extends MetricData {
 
   /**
    * Gets the uptime of the system.
+   *
    * @return seconds since boot time
    */
   public long getUpTime() {
