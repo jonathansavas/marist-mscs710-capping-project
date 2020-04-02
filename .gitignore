@@ -30,3 +30,4 @@ target/
 out/
 */extracted/*
 lib_managed/*
+!*gsudo.pdb

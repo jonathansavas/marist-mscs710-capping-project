@@ -14,10 +14,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 import java.time.Instant;
@@ -101,7 +98,7 @@ public class KafkaTest {
     try {
       os.start();
       listener.start();
-      long endTime = Instant.now().toEpochMilli() + 1000 * 15;
+      long endTime = Instant.now().toEpochMilli() + 1000 * 10;
       while (Instant.now().toEpochMilli() < endTime) {Thread.sleep(1000);}
     } finally {
       os.shutdown();
