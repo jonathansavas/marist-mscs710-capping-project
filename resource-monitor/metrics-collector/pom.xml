@@ -149,11 +149,6 @@
                         <version>${maven-surefire-plugin.version}</version>
                     </dependency>
                 </dependencies>
-                <configuration>
-                    <systemPropertyVariables>
-                        <log4j.configuration>file:src/test/resources/log4j-test.properties</log4j.configuration>
-                    </systemPropertyVariables>
-                </configuration>
             </plugin>
         </plugins>
     </build>

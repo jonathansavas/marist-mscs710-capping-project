@@ -28,6 +28,11 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>edu.marist.mscs710</groupId>
+            <artifactId>metrics-collector</artifactId>
+            <version>${parent.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -124,11 +129,6 @@
                         <version>${maven-surefire-plugin.version}</version>
                     </dependency>
                 </dependencies>
-                <configuration>
-                    <systemPropertyVariables>
-                        <log4j.configuration>file:src/test/resources/log4j-test.properties</log4j.configuration>
-                    </systemPropertyVariables>
-                </configuration>
             </plugin>
         </plugins>
     </build>

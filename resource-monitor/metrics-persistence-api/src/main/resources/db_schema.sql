@@ -1,88 +1,75 @@
---
--- File generated with SQLiteStudio v3.2.1 on Tue Feb 25 19:39:19 2020
---
--- Text encoding used: System
---
+-- This file should not have in-line comments
+-- Statements should begin on a new line (i.e. on a line there
+-- should be nothing after a semi colon)
+
 PRAGMA foreign_keys = off;
-BEGIN TRANSACTION;
 
--- Table: CPU
-CREATE TABLE CPU (
-    Datetime    BIGINT  NOT NULL
-                        PRIMARY KEY,
-    Temperature INTEGER NOT NULL,
-    Utilization REAL    NOT NULL
+CREATE TABLE IF NOT EXISTS cpu (
+    datetime     BIGINT NOT NULL PRIMARY KEY,
+    delta_millis BIGINT NOT NULL,
+    temperature  REAL,
+    utilization  REAL   NOT NULL
 );
 
-
--- Table: CPU_Core
-CREATE TABLE CPU_Core (
-    Datetime         BIGINT  PRIMARY KEY
-                             NOT NULL,
-    Core_Id          INTEGER NOT NULL,
-    Core_Utilization REAL    NOT NULL,
-    Core_Temp        INTEGER NOT NULL -- No core temp
+CREATE TABLE IF NOT EXISTS cpu_core (
+    datetime         BIGINT  NOT NULL PRIMARY KEY,
+    delta_millis     BIGINT  NOT NULL,
+    core_id          INTEGER NOT NULL,
+    core_utilization REAL    NOT NULL
 );
-
 
 -- Table: GPU
-CREATE TABLE GPU (
-    Datetime        BIGINT NOT NULL
-                           PRIMARY KEY,
-    Utilization     REAL   NOT NULL,
-    Mem_Util        REAL   NOT NULL,
-    Shared_Mem_Util REAL   NOT NULL,
-    Temperature     REAL   NOT NULL
+--CREATE TABLE IF NOT EXISTS gpu (
+--    datetime        BIGINT NOT NULL
+--                           PRIMARY KEY,
+--    utilization     REAL   NOT NULL,
+--    mem_util        REAL   NOT NULL,
+--    shared_mem_util REAL   NOT NULL,
+--    temperature     REAL   NOT NULL
+--);
+
+CREATE TABLE IF NOT EXISTS memory (
+    datetime     BIGINT NOT NULL PRIMARY KEY,
+    delta_millis BIGINT NOT NULL,
+    utilization  REAL   NOT NULL,
+    page_faults  REAL   NOT NULL
 );
 
-
--- Table: Memory
-CREATE TABLE Memory (
-    Datetime    BIGINT  PRIMARY KEY,
-    Memory_util REAL    NOT NULL,
-    Page_Faults INTEGER NOT NULL
+CREATE TABLE IF NOT EXISTS network (
+    datetime     BIGINT NOT NULL PRIMARY KEY,
+    delta_millis BIGINT NOT NULL,
+    throughput   REAL   NOT NULL,
+    send         REAL   NOT NULL,
+    receive      REAL   NOT NULL
 );
 
-
--- Table: Network
-CREATE TABLE Network (
-    Datetime   BIGINT  NOT NULL
-                       PRIMARY KEY,
-    Throughput INTEGER NOT NULL,
-    Send       REAL    NOT NULL,
-    Receive    REAL    NOT NULL
+CREATE TABLE IF NOT EXISTS processess (
+    rec_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    datetime     BIGINT  NOT NULL,
+    delta_millis BIGINT  NOT NULL,
+    pid          INTEGER NOT NULL,
+    name         TEXT    NOT NULL,
+    start_time   BIGINT  NOT NULL,
+    uptime       BIGINT  NOT NULL,
+    cpu_usage    REAL    NOT NULL,
+    memory       BIGINT  NOT NULL,
+    kb_read      REAL    NOT NULL,
+    kb_written   REAL    NOT NULL,
+    state        TEXT    NOT NULL
 );
 
-
--- Table: Processess
-CREATE TABLE Processess (
-    Rec_Id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    PID          INTEGER NOT NULL,
-    Process_Name TEXT    NOT NULL,
-    Start_Time   BIGINT  NOT NULL, -- OSHI start time given in millis, value returned has varied by +- 1
-    End_Time     BIGINT, -- Planning to make this uptime in millis instead
-    metrics      BLOB    NOT NULL
+CREATE TABLE IF NOT EXISTS system_constants (
+    total_memory     INTEGER NOT NULL,
+    physical_cores   INTEGER NOT NULL,
+    logical_cores    INTEGER NOT NULL,
+    cpu_speed        REAL    NOT NULL,
+    gpu_mem          INTEGER,
+    gpu_shared_mem   INTEGER
 );
 
-
--- Table: System_Constants
-CREATE TABLE System_Constants (
-    Total_Mem      INTEGER NOT NULL,
-    Total_Cpu      INTEGER NOT NULL,
-    GPU_MEM        INTEGER NOT NULL,
-    GPU_ShareD_Mem INTEGER NOT NULL,
-    Core_Speed     REAL    NOT NULL
+CREATE TABLE IF NOT EXISTS system_metrics (
+    datetime BIGINT NOT NULL PRIMARY KEY,
+    uptime   BIGINT NOT NULL
 );
 
-
--- Table: System_Metrics
-CREATE TABLE System_Metrics (
-    Datetime  BIGINT PRIMARY KEY
-                     NOT NULL,
-    Uptime    BIGINT NOT NULL,
-    Idle_Time BIGINT NOT NULL
-);
-
-
-COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
