@@ -7,13 +7,16 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.AcknowledgingMessageListener;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
+import org.springframework.kafka.support.Acknowledgment;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -104,7 +107,7 @@ public class KafkaConfig {
   }
 
   /**
-   * Creates a Kafka message listener with the supplied parameters.
+   * Creates an auto-acknowledging Kafka message listener with the supplied parameters.
    *
    * @param kafkaBrokers     list of Kafka brokers
    * @param consumerGroup    consumer group
@@ -122,6 +125,32 @@ public class KafkaConfig {
     ContainerProperties containerProps = new ContainerProperties(topic);
     containerProps.setAckMode(ContainerProperties.AckMode.RECORD);
     containerProps.setMessageListener((MessageListener<String, Metric>) dataConsumer::accept);
+    containerProps.setIdleBetweenPolls(idleBetweenPolls);
+
+    return new KafkaMessageListenerContainer<>(createConsumerFactory(kafkaBrokers, consumerGroup, resetPolicy), containerProps);
+  }
+
+  /**
+   * Creates a manual-acknowledging Kafka message listener with the supplied parameters.
+   * The data consumer provided is responsible for acknowledging messages.
+   *
+   * @param kafkaBrokers     list of kafka brokers
+   * @param consumerGroup    consumer group
+   * @param resetPolicy      consumer auto offset reset policy
+   * @param topic            topic from which to consume messages
+   * @param idleBetweenPolls number of milliseconds to wait between polls to get
+   *                         messages from Kafka
+   * @param dataConsumer     <tt>BiConsumer</tt> functional interface, called on a
+   *                         successful receive of a message and is responsible for
+   *                         acknowledging messages
+   * @return Kafka message listener
+   */
+  public static KafkaMessageListenerContainer<String, Metric> createListener(List<String> kafkaBrokers, String consumerGroup,
+                                                                             OffsetResetPolicy resetPolicy, String topic, long idleBetweenPolls,
+                                                                             BiConsumer<ConsumerRecord<String, Metric>, Acknowledgment> dataConsumer) {
+    ContainerProperties containerProps = new ContainerProperties(topic);
+    containerProps.setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+    containerProps.setMessageListener((AcknowledgingMessageListener<String, Metric>) dataConsumer::accept);
     containerProps.setIdleBetweenPolls(idleBetweenPolls);
 
     return new KafkaMessageListenerContainer<>(createConsumerFactory(kafkaBrokers, consumerGroup, resetPolicy), containerProps);

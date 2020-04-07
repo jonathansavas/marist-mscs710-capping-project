@@ -127,8 +127,7 @@ public class KafkaTest {
   @Test
   @Ignore
   public void entryPointTest() throws InterruptedException {
-    String runFile = "src/test/runfile.tmp";
-    System.setProperty("runfile", runFile);
+    String runFile = "./runfile.tmp";
     System.setProperty("kafkabroker", kafka.getKafkaConnectString());
 
     Thread collectorThread = new Thread(() -> {

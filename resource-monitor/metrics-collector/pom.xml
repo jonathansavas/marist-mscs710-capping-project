@@ -14,7 +14,6 @@
     <properties>
         <oshi.version>4.5.0</oshi.version>
         <spring-kafka.version>2.4.4.RELEASE</spring-kafka.version>
-        <kafka-junit4.version>3.2.1</kafka-junit4.version>
         <jackson-core.version>2.10.3</jackson-core.version>
     </properties>
 

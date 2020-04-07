@@ -13,12 +13,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * SQLite implementation of <tt>MetricsPersistenceService</tt>. This class is
+ * responsible for instantiating a SQLite database instance and persisting
+ * <tt>Metric</tt> data objects.
+ */
 public class SQLiteMetricsImpl implements MetricsPersistenceService {
   private static final Logger LOGGER = LoggerFactory.getLogger(SQLiteMetricsImpl.class);
 
   private String dbUrl;
   private List<String> metricTypes;
 
+  /**
+   * Constructs a new <tt>SQLiteMetricsImpl</tt>, which will use an existing
+   * SQLite db file, or create a new database if one does not exist at
+   * "dbFilePath". Upon construction, this will also create/update the database
+   * schema according to the ".sql" file at "dbSchemaPath".
+   *
+   * @param dbFilePath    path of the sqlite database file
+   * @param dbSchemaPath  path of the sql database schema file
+   * @throws SQLException
+   * @throws IOException
+   */
   public SQLiteMetricsImpl(String dbFilePath, String dbSchemaPath) throws SQLException, IOException {
     this.dbUrl = createSqliteDbUrl(dbFilePath);
     executeSqlScript(dbSchemaPath);
@@ -37,6 +53,12 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     return true;
   }
 
+  /**
+   * Create an SQL INSERT statement for the supplied <tt>Metric</tt>.
+   *
+   * @param metric a <tt>Metric</tt> object
+   * @return sql insert statement
+   */
   public static String createSqlInsertStatement(Metric metric) {
     StringBuilder sqlInsert = new StringBuilder("INSERT INTO ")
       .append(metric.getMetricType().toString().toLowerCase())
@@ -90,6 +112,12 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     return new ArrayList<>(metricTypes);
   }
 
+  /**
+   * Creates a connection String for the supplied SQLite database file.
+   *
+   * @param dbFilePath path of the SQLite database file
+   * @return SQLite database connection String
+   */
   public static String createSqliteDbUrl(String dbFilePath) {
     return "jdbc:sqlite:" + dbFilePath;
   }

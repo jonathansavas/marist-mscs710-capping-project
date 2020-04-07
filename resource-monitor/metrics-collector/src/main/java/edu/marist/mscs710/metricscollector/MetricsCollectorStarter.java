@@ -10,10 +10,15 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Starts the metrics collection process. This class is responsible for
+ * managing the lifecycle of a <tt>MetricsProducer</tt>.
+ */
 public class MetricsCollectorStarter {
   private static final Logger LOGGER = LoggerFactory.getLogger(MetricsCollectorStarter.class);
 
@@ -21,13 +26,14 @@ public class MetricsCollectorStarter {
   private static final int REQUEST_TIMEOUT_MS = 1000 * 30;
   private static final int RUNFILE_CHECK_INTERVAL_MS = 1000 * 2;
   private static final String TOPIC = "metrics";
-
-  private static Properties appProps = new Properties();
+  private static final String RUNFILE = "./runfile.tmp";
 
   public static void main(String[] args) throws IOException {
+    Properties appProps = new Properties();
+
     try {
-      appProps.load(new FileInputStream(PROPERTIES_FILE));
-    } catch (IOException ex) {
+      appProps.load(new FileInputStream(getFileFromClasspath(PROPERTIES_FILE)));
+    } catch (IOException | URISyntaxException ex) {
       LOGGER.error(LoggerUtils.getExceptionMessage(ex));
     }
 
@@ -54,8 +60,7 @@ public class MetricsCollectorStarter {
 
     kafkaAdminClient.close();
 
-    String runFilePath = appProps.getProperty("runfile", "./metrics-collector-runfile.tmp");
-    File runFile = new File(runFilePath);
+    File runFile = new File(RUNFILE);
 
     runFile.createNewFile();
     runFile.deleteOnExit();
@@ -85,5 +90,9 @@ public class MetricsCollectorStarter {
         new NewTopic(MetricsCollectorStarter.TOPIC, 1, (short) 1)));
 
     result.all().get();
+  }
+
+  private static File getFileFromClasspath(String name) throws URISyntaxException {
+    return new File(ClassLoader.getSystemClassLoader().getResource(name).toURI());
   }
 }
