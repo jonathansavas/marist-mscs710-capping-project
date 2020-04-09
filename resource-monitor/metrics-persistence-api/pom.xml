@@ -31,7 +31,7 @@
         <dependency>
             <groupId>edu.marist.mscs710</groupId>
             <artifactId>metrics-collector</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
@@ -146,7 +146,6 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.basedir}/target/metrics-persistence/libs</outputDirectory>
-                            <includeScope>compile</includeScope>
                             <includeScope>runtime</includeScope>
                         </configuration>
                     </execution>

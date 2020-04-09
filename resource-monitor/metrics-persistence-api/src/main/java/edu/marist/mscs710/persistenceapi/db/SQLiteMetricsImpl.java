@@ -39,6 +39,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     this.dbUrl = createSqliteDbUrl(dbFilePath);
     executeSqlScript(dbSchemaPath);
     setMetricTypes();
+    LOGGER.info("SQLiteMetricsImpl created for db file path '{}'", dbFilePath);
   }
 
   @Override

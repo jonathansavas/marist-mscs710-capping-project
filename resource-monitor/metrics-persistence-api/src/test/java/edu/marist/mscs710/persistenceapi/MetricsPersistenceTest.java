@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +41,13 @@ public class MetricsPersistenceTest {
     sqlIte = new SQLiteMetricsImpl(dbFilePath, dbSchemaPath);
   }
 
+  private String topic;
+
+  @Before
+  public void generateRandomTopic() {
+    topic = "test-topic-embedded" + Instant.now().toEpochMilli();
+  }
+
   @AfterClass
   public static void cleanup() throws SQLException {
     List<String> tableNames = sqlIte.getMetricTypes();
@@ -54,8 +62,6 @@ public class MetricsPersistenceTest {
 
   @Test
   public void testKafkaListener() throws InterruptedException, SQLException, ExecutionException {
-    String topic = "metrics";
-
     List<Metric> metrics = LongStream.range(1, 6)
       .mapToObj(l -> createTestSystemMetric(l, l))
       .collect(Collectors.toList());
@@ -74,6 +80,7 @@ public class MetricsPersistenceTest {
 
     String runFile = "./runfile.tmp";
     System.setProperty("kafkabroker", kafka.getKafkaConnectString());
+    System.setProperty("metricstopic", topic);
 
     Thread consumerThread = new Thread(() -> MetricsPersistenceStarter.main(new String[0]));
 

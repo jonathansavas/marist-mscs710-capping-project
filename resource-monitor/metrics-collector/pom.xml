@@ -131,7 +131,6 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.basedir}/target/metrics-collector/libs</outputDirectory>
-                            <includeScope>compile</includeScope>
                             <includeScope>runtime</includeScope>
                         </configuration>
                     </execution>

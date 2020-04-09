@@ -18,7 +18,6 @@ import org.junit.*;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
@@ -130,13 +129,7 @@ public class KafkaTest {
     String runFile = "./runfile.tmp";
     System.setProperty("kafkabroker", kafka.getKafkaConnectString());
 
-    Thread collectorThread = new Thread(() -> {
-      try {
-        MetricsCollectorStarter.main(new String[0]);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    });
+    Thread collectorThread = new Thread(() -> MetricsCollectorStarter.main(new String[0]));
 
     collectorThread.start();
 

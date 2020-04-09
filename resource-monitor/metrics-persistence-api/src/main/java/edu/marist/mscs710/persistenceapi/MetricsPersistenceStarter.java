@@ -27,7 +27,9 @@ public class MetricsPersistenceStarter {
   private static final int RUNFILE_CHECK_INTERVAL_MS = 1000 * 2;
   private static final int IDLE_BETWEEN_POLLS = 1000 * 2;
   private static final String PROPERTIES_FILE = "application.properties";
-  private static final String TOPIC = "metrics";
+  private static final String DEFAULT_TOPIC = "resource-monitor-metrics";
+  private static final String DEFAULT_BROKER = "localhost:9092";
+  private static final String DEFAULT_DB_DIR = "./db";
   private static final String CONSUMER_GROUP = "PERSISTENCE_SERVICE";
   private static final String RUNFILE = "./runfile.tmp";
 
@@ -45,7 +47,6 @@ public class MetricsPersistenceStarter {
     // Command-line properties should take precedence over properties file.
     appProps.putAll(System.getProperties());
 
-    String dbDirectory = appProps.getProperty("dbdirectory", "./db");
     File runFile = new File(RUNFILE);
 
     try {
@@ -57,6 +58,10 @@ public class MetricsPersistenceStarter {
 
     runFile.deleteOnExit();
 
+    String dbDirectory = appProps.getProperty("dbdirectory", DEFAULT_DB_DIR);
+    String kafkaBroker = appProps.getProperty("kafkabroker", DEFAULT_BROKER);
+    String topic = appProps.getProperty("metricstopic", DEFAULT_TOPIC);
+
     try {
       metricsPersistenceService = new SQLiteMetricsImpl(
         dbDirectory + "/metrics.db",
@@ -66,11 +71,10 @@ public class MetricsPersistenceStarter {
       return;
     }
 
-    String kafkaBroker = appProps.getProperty("kafkabroker", "localhost:9092");
-
     KafkaMessageListenerContainer<String, Metric> listener = KafkaConfig.createListener(
       Collections.singletonList(kafkaBroker), CONSUMER_GROUP,
-      KafkaConfig.OffsetResetPolicy.EARLIEST, TOPIC, IDLE_BETWEEN_POLLS,
+      KafkaConfig.OffsetResetPolicy.EARLIEST, topic, IDLE_BETWEEN_POLLS,
+      // Listener executes this function on each message
       (metric, ack) -> {
         metricsPersistenceService.persistMetric(metric.value());
         ack.acknowledge();
@@ -78,6 +82,8 @@ public class MetricsPersistenceStarter {
     );
 
     listener.start();
+
+    LOGGER.info("Listening to topic '{}' on kafka broker at '{}' ", topic, kafkaBroker);
 
     while (runFile.exists()) {
       try {
