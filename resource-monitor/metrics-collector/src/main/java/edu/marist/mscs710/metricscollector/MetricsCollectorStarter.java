@@ -44,7 +44,7 @@ public class MetricsCollectorStarter {
     String kafkaBroker = appProps.getProperty("kafkabroker", DEFAULT_BROKER);
     String topic = appProps.getProperty("metricstopic", DEFAULT_TOPIC);
 
-    try (AdminClient kafkaAdminClient = createKafkaAdminClient(kafkaBroker);) {
+    try (AdminClient kafkaAdminClient = createKafkaAdminClient(kafkaBroker)) {
       // Test broker connection and create topic if necessary
       if (!kafkaAdminClient.listTopics().names().get().contains(topic)) {
         createTopic(kafkaAdminClient, topic);
