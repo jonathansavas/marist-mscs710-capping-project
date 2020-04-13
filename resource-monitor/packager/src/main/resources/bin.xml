@@ -58,6 +58,10 @@
                             <include>kafka/</include>
                         </includes>
                     </fileSet>
+                    <fileSet>
+                        <outputDirectory>./</outputDirectory>
+                        <directory>target/scripts</directory>
+                    </fileSet>
                 </fileSets>
             </sources>
         </moduleSet>

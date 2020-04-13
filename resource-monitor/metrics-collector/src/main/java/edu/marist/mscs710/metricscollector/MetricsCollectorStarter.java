@@ -3,6 +3,7 @@ package edu.marist.mscs710.metricscollector;
 import edu.marist.mscs710.metricscollector.producer.OSMetricsProducer;
 import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -28,6 +31,7 @@ public class MetricsCollectorStarter {
   private static final String DEFAULT_TOPIC = "resource-monitor-metrics";
   private static final String DEFAULT_BROKER = "localhost:9092";
   private static final String RUNFILE = "./runfile.tmp";
+  private static final int LOG_RETENTION_HOURS = 24;
 
   public static void main(String[] args) {
     Properties appProps = new Properties();
@@ -93,9 +97,14 @@ public class MetricsCollectorStarter {
 
   private static void createTopic(AdminClient adminClient, String topic)
     throws TimeoutException, InterruptedException, ExecutionException {
-    CreateTopicsResult result = adminClient.createTopics(
-      Collections.singletonList(
-        new NewTopic(topic, 1, (short) 1)));
+
+    NewTopic metricsTopic = new NewTopic(topic, 1, (short) 1);
+
+    Map<String, String> configs = metricsTopic.configs() == null ? new HashMap<>() : metricsTopic.configs();
+    configs.put(TopicConfig.RETENTION_MS_CONFIG, Long.toString(LOG_RETENTION_HOURS * 60 * 60 * 1000));
+    metricsTopic.configs(configs);
+
+    CreateTopicsResult result = adminClient.createTopics(Collections.singletonList(metricsTopic));
 
     result.all().get();
   }
