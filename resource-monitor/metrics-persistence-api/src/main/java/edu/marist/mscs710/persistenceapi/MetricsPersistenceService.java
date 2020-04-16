@@ -1,6 +1,6 @@
 package edu.marist.mscs710.persistenceapi;
 
-import edu.marist.mscs710.metricscollector.metric.Metric;
+import edu.marist.mscs710.metricscollector.Metric;
 
 import java.util.List;
 

@@ -3,7 +3,7 @@ package edu.marist.mscs710.metricscollector.data;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import edu.marist.mscs710.metricscollector.MetricRecord;
+import edu.marist.mscs710.metricscollector.Metric;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 
 /**
@@ -21,7 +21,7 @@ import edu.marist.mscs710.metricscollector.metric.Fields;
   @JsonSubTypes.Type(value = ProcessData.class, name = Fields.METRIC_TYPE_PROCESSES),
   @JsonSubTypes.Type(value = SystemData.class, name = Fields.METRIC_TYPE_SYSTEM_METRICS),
 })
-public abstract class MetricData implements MetricRecord {
+public abstract class MetricData implements Metric {
 
   @JsonProperty(Fields.DELTA_MILLIS)
   protected long deltaMillis;

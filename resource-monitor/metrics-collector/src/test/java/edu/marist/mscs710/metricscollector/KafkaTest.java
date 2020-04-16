@@ -2,12 +2,11 @@ package edu.marist.mscs710.metricscollector;
 
 import com.salesforce.kafka.test.KafkaTestUtils;
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
+import edu.marist.mscs710.metricscollector.data.CpuCoreData;
 import edu.marist.mscs710.metricscollector.kafka.KafkaConfig;
 import edu.marist.mscs710.metricscollector.kafka.MetricDeserializer;
 import edu.marist.mscs710.metricscollector.kafka.MetricSerializer;
-import edu.marist.mscs710.metricscollector.metric.Fields;
-import edu.marist.mscs710.metricscollector.metric.Metric;
-import edu.marist.mscs710.metricscollector.metric.MetricType;
+import edu.marist.mscs710.metricscollector.metric.NullMetric;
 import edu.marist.mscs710.metricscollector.producer.OSMetricsProducer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -21,7 +20,6 @@ import java.io.File;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class KafkaTest {
 
@@ -37,10 +35,7 @@ public class KafkaTest {
 
   @Test
   public void testMetricSerializerDeserializerViaKafka() {
-    Metric before = new Metric(MetricType.SYSTEM_METRICS, new HashMap<String, Object>() {{
-      put(Fields.SYSTEM_METRICS_UPTIME, 999999);
-      put(Fields.SYSTEM_METRICS_DATETIME, 111111);
-    }});
+    CpuCoreData before = new CpuCoreData(Integer.MAX_VALUE, Double.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE);
 
     KafkaTestUtils k = kafka.getKafkaTestUtils();
 
@@ -56,19 +51,12 @@ public class KafkaTest {
 
     Assert.assertEquals(consumerRecords.size(), 1);
 
-    Metric after = consumerRecords.get(0).value();
+    CpuCoreData after = (CpuCoreData) consumerRecords.get(0).value();
 
-    Assert.assertEquals(before.getMetricType(), after.getMetricType());
-
-    Assert.assertEquals(
-      before.getMetricData().get(Fields.SYSTEM_METRICS_UPTIME),
-      after.getMetricData().get(Fields.SYSTEM_METRICS_UPTIME)
-    );
-
-    Assert.assertEquals(
-      before.getMetricData().get(Fields.SYSTEM_METRICS_DATETIME),
-      after.getMetricData().get(Fields.SYSTEM_METRICS_DATETIME)
-    );
+    Assert.assertEquals(before.getEpochMillisTime(), after.getEpochMillisTime());
+    Assert.assertEquals(before.getDeltaMillis(), after.getDeltaMillis());
+    Assert.assertEquals(before.getCoreUtilization(), after.getCoreUtilization(), 0.0);
+    Assert.assertEquals(before.getCoreId(), after.getCoreId());
   }
 
   @Test
@@ -77,20 +65,7 @@ public class KafkaTest {
     List<String> brokers = Collections.singletonList(kafkaBroker);
     MetricsProducer os = new OSMetricsProducer(brokers, topic);
 
-    Map<MetricType, Collection<String>> metricsFields = new HashMap<MetricType, Collection<String>>() {
-      {
-        put(MetricType.CPU, Fields.CPU_FIELDS);
-        put(MetricType.CPU_CORE, Fields.CPU_CORE_FIELDS);
-        put(MetricType.MEMORY, Fields.MEMORY_FIELDS);
-        put(MetricType.NETWORK, Fields.NETWORK_FIELDS);
-        put(MetricType.PROCESSES, Fields.PROCESSES_FIELDS);
-        put(MetricType.SYSTEM_CONSTANTS, Fields.SYSTEM_CONSTANTS_FIELDS);
-        put(MetricType.SYSTEM_METRICS, Fields.SYSTEM_METRICS_FIELDS);
-      }
-    };
-
     List<Metric> metrics = new ArrayList<>();
-
     Consumer<ConsumerRecord<String, Metric>> dataConsumer = (m) -> metrics.add(m.value());
 
     KafkaMessageListenerContainer<String, Metric> listener =
@@ -112,14 +87,7 @@ public class KafkaTest {
     Assert.assertTrue(metrics.size() > 0);
 
     for (Metric metric : metrics) {
-      Assert.assertNotSame(metric.getMetricType(), MetricType.NULL);
-      MetricType type = metric.getMetricType();
-      Map<String, Object> metricData = metric.getMetricData();
-      Collection<String> fields = metricsFields.get(type);
-
-      for (String field : metricData.keySet()) {
-        Assert.assertTrue(fields.contains(field));
-      }
+      Assert.assertFalse(metric instanceof NullMetric);
     }
   }
 
@@ -136,12 +104,5 @@ public class KafkaTest {
     Thread.sleep(15000);
     new File(runFile).delete();
     collectorThread.join();
-  }
-
-
-  public static <E extends Enum<E>> Set<String> toStringSet(E[] enumValues) {
-    return Arrays.stream(enumValues)
-      .map(Enum::toString)
-      .collect(Collectors.toSet());
   }
 }

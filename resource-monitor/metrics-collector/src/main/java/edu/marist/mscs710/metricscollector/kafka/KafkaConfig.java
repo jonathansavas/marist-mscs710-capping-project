@@ -1,6 +1,6 @@
 package edu.marist.mscs710.metricscollector.kafka;
 
-import edu.marist.mscs710.metricscollector.metric.Metric;
+import edu.marist.mscs710.metricscollector.Metric;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;

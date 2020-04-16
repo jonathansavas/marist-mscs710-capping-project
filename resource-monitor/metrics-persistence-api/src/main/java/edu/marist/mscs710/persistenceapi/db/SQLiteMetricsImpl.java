@@ -1,8 +1,6 @@
 package edu.marist.mscs710.persistenceapi.db;
 
-import edu.marist.mscs710.metricscollector.metric.Fields;
-import edu.marist.mscs710.metricscollector.metric.Metric;
-import edu.marist.mscs710.metricscollector.metric.MetricType;
+import edu.marist.mscs710.metricscollector.Metric;
 import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import edu.marist.mscs710.persistenceapi.MetricsPersistenceService;
 import org.slf4j.Logger;
@@ -54,47 +52,13 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
   @Override
   public boolean persistMetric(Metric metric) {
     try (Connection conn = getSqliteConnection()) {
-      conn.createStatement().execute(createSqlInsertStatement(metric));
+      conn.createStatement().execute(metric.toSqlInsertString());
     } catch (SQLException e) {
       LOGGER.error(LoggerUtils.getExceptionMessage(e));
       return false;
     }
 
     return true;
-  }
-
-  /**
-   * Create an SQL INSERT statement for the supplied <tt>Metric</tt>.
-   *
-   * @param metric a <tt>Metric</tt> object
-   * @return sql insert statement
-   */
-  public static String createSqlInsertStatement(Metric metric) {
-    StringBuilder sqlInsert = new StringBuilder("INSERT INTO ")
-      .append(metric.getMetricType().toString().toLowerCase())
-      .append(" (");
-
-    StringBuilder sqlValues = new StringBuilder(" VALUES (");
-
-    for (Map.Entry<String, Object> entry : metric.getMetricData().entrySet()) {
-      sqlInsert.append(entry.getKey().toLowerCase()).append(',');
-
-      if (entry.getValue() instanceof String) {
-        sqlValues.append('\"').append(entry.getValue()).append('\"');
-      } else {
-        sqlValues.append(entry.getValue());
-      }
-
-      sqlValues.append(',');
-    }
-
-    sqlInsert.deleteCharAt(sqlInsert.length() - 1);
-    sqlValues.deleteCharAt(sqlValues.length() - 1);
-
-    sqlInsert.append(')');
-    sqlValues.append(");");
-
-    return sqlInsert.append(sqlValues).toString();
   }
 
   private void setMetricTypes() {
@@ -160,7 +124,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     }
   }
 
-  private List<Metric> basicPrune(Map<String, List<Metric>> batchedRecords) {
+  /*private List<Metric> basicPrune(Map<String, List<Metric>> batchedRecords) {
     List<Metric> prunedMetrics = new ArrayList<>();
     List<Metric> snapshotBucket = new ArrayList<>();
 
@@ -205,7 +169,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       LoggerUtils.getExceptionMessage(e);
       return new HashMap<>();
     }
-  }
+  }*/
 
   private static ResultSet getRecordsToPrune(long earliest, long latest, String table, Connection conn) throws SQLException {
     // Earliest is inclusive and latest is exclusive

@@ -1,16 +1,20 @@
 package edu.marist.mscs710.metricscollector.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
-import edu.marist.mscs710.metricscollector.metric.Metric;
-
-import java.util.*;
 
 /**
  * Holds a snapshot of CPU data. CPU usage metrics are given as percent
  * utilization from 0.0-1.0.
  */
 public class CpuData extends MetricData {
+  public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
+    Fields.METRIC_TYPE_CPU + " (" +
+    Fields.CPU_DATETIME + ',' +
+    Fields.CPU_DELTA_MILLIS + ',' +
+    Fields.CPU_UTILIZATION + ',' +
+    Fields.CPU_TEMPERATURE + ") VALUES ";
 
   @JsonProperty(Fields.CPU_UTILIZATION)
   private double utilization; // Total cpu usage during previous delta millis
@@ -26,7 +30,11 @@ public class CpuData extends MetricData {
    * @param deltaMillis     time covered by this snapshot
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
-  public CpuData(double utilization, double temperature, long deltaMillis, long epochMillisTime) {
+  @JsonCreator
+  public CpuData(@JsonProperty(Fields.CPU_UTILIZATION) double utilization,
+                 @JsonProperty(Fields.CPU_TEMPERATURE) double temperature,
+                 @JsonProperty(Fields.DELTA_MILLIS)long deltaMillis,
+                 @JsonProperty(Fields.DATETIME) long epochMillisTime) {
     this.utilization = utilization;
     this.temperature = temperature;
     this.deltaMillis = deltaMillis;
@@ -63,7 +71,11 @@ public class CpuData extends MetricData {
   }
 
   @Override
-  public List<Metric> toMetricRecords() {
-    return null;
+  public String toSqlInsertString() {
+    return SQL_INSERT_PREFIX + '(' +
+      epochMillisTime + ',' +
+      deltaMillis + ',' +
+      utilization + ',' +
+      temperature + ')' + ';';
   }
 }

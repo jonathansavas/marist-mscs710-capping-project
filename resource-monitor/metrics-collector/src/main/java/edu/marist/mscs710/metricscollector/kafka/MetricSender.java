@@ -1,6 +1,6 @@
 package edu.marist.mscs710.metricscollector.kafka;
 
-import edu.marist.mscs710.metricscollector.metric.Metric;
+import edu.marist.mscs710.metricscollector.Metric;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.List;

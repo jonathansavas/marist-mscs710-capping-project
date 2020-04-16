@@ -3,14 +3,12 @@ package edu.marist.mscs710.metricscollector.metric;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Holds a snapshot of generic metric data.
  */
-public class Metric {
+public class MetricMap {
   private MetricType metricType;
 
   private Map<String, Object> metricData;
@@ -22,8 +20,8 @@ public class Metric {
    * @param metricData map of metric data
    */
   @JsonCreator
-  public Metric(@JsonProperty(value = "metricType") MetricType metricType,
-                @JsonProperty(value = "metricData") Map<String, Object> metricData) {
+  public MetricMap(@JsonProperty(value = "metricType") MetricType metricType,
+                   @JsonProperty(value = "metricData") Map<String, Object> metricData) {
     this.metricType = metricType;
     this.metricData = metricData;
   }

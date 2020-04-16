@@ -2,10 +2,10 @@ package edu.marist.mscs710.persistenceapi;
 
 import com.salesforce.kafka.test.KafkaTestUtils;
 import com.salesforce.kafka.test.junit4.SharedKafkaTestResource;
+import edu.marist.mscs710.metricscollector.data.SystemData;
 import edu.marist.mscs710.metricscollector.kafka.MetricSerializer;
 import edu.marist.mscs710.metricscollector.metric.Fields;
-import edu.marist.mscs710.metricscollector.metric.Metric;
-import edu.marist.mscs710.metricscollector.metric.MetricType;
+import edu.marist.mscs710.metricscollector.Metric;
 import edu.marist.mscs710.persistenceapi.db.SQLiteMetricsImpl;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -63,7 +63,7 @@ public class MetricsPersistenceTest {
   @Test
   public void testKafkaListener() throws InterruptedException, SQLException, ExecutionException {
     List<Metric> metrics = LongStream.range(1, 6)
-      .mapToObj(l -> createTestSystemMetric(l, l))
+      .mapToObj(l -> createTestSystemMetric(l, l, l))
       .collect(Collectors.toList());
 
     KafkaTestUtils kTest = kafka.getKafkaTestUtils();
@@ -91,7 +91,7 @@ public class MetricsPersistenceTest {
 
     try (Connection conn = DriverManager.getConnection(SQLiteMetricsImpl.createSqliteDbUrl(dbFilePath))) {
       ResultSet rs = conn.createStatement()
-        .executeQuery("SELECT * FROM " + metrics.get(0).getMetricType().toString().toLowerCase() + ";");
+        .executeQuery("SELECT * FROM " + Fields.METRIC_TYPE_SYSTEM_METRICS + ";");
 
       for (int i = 0; i < metrics.size(); i++) {
         rs.next();
@@ -113,10 +113,7 @@ public class MetricsPersistenceTest {
     }
   }
 
-  public static Metric createTestSystemMetric(long datetime, long uptime) {
-    return new Metric(MetricType.SYSTEM_METRICS, new HashMap<String, Object>() {{
-      put(Fields.SystemMetrics.DATETIME.toString(), datetime);
-      put(Fields.SystemMetrics.UPTIME.toString(), uptime);
-    }});
+  public static Metric createTestSystemMetric(long datetime, long uptime, long deltaMillis) {
+    return new SystemData(uptime, deltaMillis, datetime);
   }
 }

@@ -1,15 +1,19 @@
 package edu.marist.mscs710.metricscollector.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
-import edu.marist.mscs710.metricscollector.metric.Metric;
-
-import java.util.List;
 
 /**
  * Holds a snapshot of Memory data.
  */
 public class MemoryData extends MetricData {
+  public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
+    Fields.METRIC_TYPE_MEMORY + " (" +
+    Fields.MEMORY_DATETIME + ',' +
+    Fields.MEMORY_DELTA_MILLIS + ',' +
+    Fields.MEMORY_PAGE_FAULTS + ',' +
+    Fields.MEMORY_UTILIZATION + ") VALUES ";
 
   @JsonProperty(Fields.MEMORY_UTILIZATION)
   private double memoryUtilization; // Pct memory in use
@@ -28,6 +32,17 @@ public class MemoryData extends MetricData {
   public MemoryData(double memoryUtilization, long pageFaults, long deltaMillis, long epochMillisTime) {
     this.memoryUtilization = memoryUtilization;
     this.pageFaults = ((double) pageFaults) / deltaMillis * 1000.0;
+    this.deltaMillis = deltaMillis;
+    this.epochMillisTime = epochMillisTime;
+  }
+
+  @JsonCreator
+  public MemoryData(@JsonProperty(Fields.MEMORY_UTILIZATION) double memoryUtilization,
+                    @JsonProperty(Fields.MEMORY_PAGE_FAULTS) double pageFaults,
+                    @JsonProperty(Fields.DELTA_MILLIS)long deltaMillis,
+                    @JsonProperty(Fields.DATETIME) long epochMillisTime) {
+    this.memoryUtilization = memoryUtilization;
+    this.pageFaults = pageFaults;
     this.deltaMillis = deltaMillis;
     this.epochMillisTime = epochMillisTime;
   }
@@ -61,7 +76,11 @@ public class MemoryData extends MetricData {
   }
 
   @Override
-  public List<Metric> toMetricRecords() {
-    return null;
+  public String toSqlInsertString() {
+    return SQL_INSERT_PREFIX + '(' +
+      epochMillisTime + ',' +
+      deltaMillis + ',' +
+      pageFaults + ',' +
+      memoryUtilization + ')' + ';';
   }
 }

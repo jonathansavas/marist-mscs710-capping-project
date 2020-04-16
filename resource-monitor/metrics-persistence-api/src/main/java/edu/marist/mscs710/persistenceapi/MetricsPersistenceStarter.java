@@ -1,7 +1,8 @@
 package edu.marist.mscs710.persistenceapi;
 
 import edu.marist.mscs710.metricscollector.kafka.KafkaConfig;
-import edu.marist.mscs710.metricscollector.metric.Metric;
+import edu.marist.mscs710.metricscollector.Metric;
+import edu.marist.mscs710.metricscollector.metric.NullMetric;
 import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import edu.marist.mscs710.persistenceapi.db.SQLiteMetricsImpl;
 import org.slf4j.Logger;
@@ -75,8 +76,11 @@ public class MetricsPersistenceStarter {
       Collections.singletonList(kafkaBroker), CONSUMER_GROUP,
       KafkaConfig.OffsetResetPolicy.EARLIEST, topic, IDLE_BETWEEN_POLLS,
       // Listener executes this function on each message
-      (metric, ack) -> {
-        metricsPersistenceService.persistMetric(metric.value());
+      (consumerRecord, ack) -> {
+        Metric metric = consumerRecord.value();
+        if (!(metric instanceof NullMetric)) {
+          metricsPersistenceService.persistMetric(metric);
+        }
         ack.acknowledge();
       }
     );

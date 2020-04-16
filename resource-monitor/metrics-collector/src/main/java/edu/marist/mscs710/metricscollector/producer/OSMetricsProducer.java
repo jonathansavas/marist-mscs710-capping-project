@@ -4,7 +4,6 @@ import edu.marist.mscs710.metricscollector.MetricSource;
 import edu.marist.mscs710.metricscollector.MetricsProducer;
 import edu.marist.mscs710.metricscollector.data.MetricData;
 import edu.marist.mscs710.metricscollector.kafka.MetricSender;
-import edu.marist.mscs710.metricscollector.metric.Metric;
 import edu.marist.mscs710.metricscollector.system.*;
 import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import org.slf4j.Logger;
@@ -201,8 +200,7 @@ public class OSMetricsProducer implements MetricsProducer {
         .collect(Collectors.toList());
 
       for (MetricData metricData : metricDataList) {
-        for (Metric metric : metricData.toMetricRecords())
-          metricSender.send(topic, metric);
+        metricSender.send(topic, metricData);
       }
 
       metricSender.flush();
@@ -247,8 +245,6 @@ public class OSMetricsProducer implements MetricsProducer {
   }
 
   private void sendSystemConstants() {
-    for (Metric systemConstantRecord : systemConstants.toMetricRecords()) {
-      metricSender.send(topic, systemConstantRecord);
-    }
+    metricSender.send(topic, systemConstants);
   }
 }

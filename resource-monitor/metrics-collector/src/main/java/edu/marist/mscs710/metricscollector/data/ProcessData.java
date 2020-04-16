@@ -1,23 +1,29 @@
 package edu.marist.mscs710.metricscollector.data;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
-import edu.marist.mscs710.metricscollector.metric.Metric;
-import edu.marist.mscs710.metricscollector.metric.MetricType;
 import edu.marist.mscs710.metricscollector.system.Processes;
-
-import java.util.List;
 
 /**
  * Holds a snapshot of Process data.
  */
 public class ProcessData extends MetricData {
-  @JsonIgnore
-  private static final long BYTES_PER_KB = 1024L;
+  public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
+    Fields.METRIC_TYPE_PROCESSES + " (" +
+    Fields.PROCESSES_DATETIME + ',' +
+    Fields.PROCESSES_DELTA_MILLIS + ',' +
+    Fields.PROCESSES_PID + ',' +
+    Fields.PROCESSES_NAME + ',' +
+    Fields.PROCESSES_START_TIME + ',' +
+    Fields.PROCESSES_UPTIME + ',' +
+    Fields.PROCESSES_CPU_USAGE + ',' +
+    Fields.PROCESSES_MEMORY + ',' +
+    Fields.PROCESSES_KB_READ + ',' +
+    Fields.PROCESSES_KB_WRITTEN + ',' +
+    Fields.PROCESSES_STATE + ") VALUES ";
 
-  @JsonProperty(Fields.METRIC_TYPE)
-  private static final String metricType = MetricType.PROCESSES.toString().toLowerCase();
+  private static final long BYTES_PER_KB = 1024L;
 
   @JsonProperty(Fields.PROCESSES_PID)
   private int pid;
@@ -95,6 +101,31 @@ public class ProcessData extends MetricData {
     this.kbWritten = -1;
     this.deltaMillis = -1;
     this.pidState = Processes.PidState.ENDED;
+    this.epochMillisTime = epochMillisTime;
+  }
+
+  @JsonCreator
+  public ProcessData(@JsonProperty(Fields.PROCESSES_PID) int pid,
+                     @JsonProperty(Fields.PROCESSES_NAME) String name,
+                     @JsonProperty(Fields.PROCESSES_START_TIME) long startTime,
+                     @JsonProperty(Fields.PROCESSES_UPTIME) long upTime,
+                     @JsonProperty(Fields.PROCESSES_CPU_USAGE) double cpuUsage,
+                     @JsonProperty(Fields.PROCESSES_MEMORY) long memory,
+                     @JsonProperty(Fields.PROCESSES_KB_READ) double kbRead,
+                     @JsonProperty(Fields.PROCESSES_KB_WRITTEN) double kbWritten,
+                     @JsonProperty(Fields.PROCESSES_STATE) Processes.PidState pidState,
+                     @JsonProperty(Fields.DELTA_MILLIS)long deltaMillis,
+                     @JsonProperty(Fields.DATETIME) long epochMillisTime) {
+    this.pid = pid;
+    this.name = name;
+    this.startTime = startTime;
+    this.upTime = upTime;
+    this.cpuUsage = cpuUsage;
+    this.memory = memory;
+    this.kbRead = kbRead;
+    this.kbWritten = kbWritten;
+    this.deltaMillis = deltaMillis;
+    this.pidState = pidState;
     this.epochMillisTime = epochMillisTime;
   }
 
@@ -197,7 +228,18 @@ public class ProcessData extends MetricData {
   }
 
   @Override
-  public List<Metric> toMetricRecords() {
-    return null;
+  public String toSqlInsertString() {
+    return SQL_INSERT_PREFIX + '(' +
+      epochMillisTime + ',' +
+      deltaMillis + ',' +
+      pid + ',' +
+      '\'' + name + '\'' + ',' +
+      startTime + ',' +
+      upTime + ',' +
+      cpuUsage + ',' +
+      memory + ',' +
+      kbRead + ',' +
+      kbWritten + ',' +
+      '\'' + pidState + '\'' + ')' + ';';
   }
 }

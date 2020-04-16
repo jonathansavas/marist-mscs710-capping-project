@@ -1,15 +1,20 @@
 package edu.marist.mscs710.metricscollector.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
-import edu.marist.mscs710.metricscollector.metric.Metric;
-
-import java.util.List;
 
 /**
  * Holds a snapshot of Network data.
  */
 public class NetworkData extends MetricData {
+  public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
+    Fields.METRIC_TYPE_NETWORK + " (" +
+    Fields.NETWORK_DATETIME + ',' +
+    Fields.NETWORK_DELTA_MILLIS + ',' +
+    Fields.NETWORK_RECEIVE + ',' +
+    Fields.NETWORK_SEND + ',' +
+    Fields.NETWORK_THROUGHPUT + ") VALUES ";
 
   private static final long BITS_PER_KILOBIT = 1000L;
 
@@ -37,6 +42,19 @@ public class NetworkData extends MetricData {
     this.send = ((double) bytesSent) / deltaMillis * BITS_PER_BYTE;
     this.receive = ((double) bytesRecv) / deltaMillis * BITS_PER_BYTE;
     this.throughput = speed / BITS_PER_KILOBIT;
+    this.deltaMillis = deltaMillis;
+    this.epochMillisTime = epochMillisTime;
+  }
+
+  @JsonCreator
+  public NetworkData(@JsonProperty(Fields.NETWORK_SEND)double send,
+                     @JsonProperty(Fields.NETWORK_RECEIVE) double receive,
+                     @JsonProperty(Fields.NETWORK_THROUGHPUT) long throughput,
+                     @JsonProperty(Fields.DELTA_MILLIS)long deltaMillis,
+                     @JsonProperty(Fields.DATETIME) long epochMillisTime) {
+    this.send = send;
+    this.receive = receive;
+    this.throughput = throughput;
     this.deltaMillis = deltaMillis;
     this.epochMillisTime = epochMillisTime;
   }
@@ -81,7 +99,12 @@ public class NetworkData extends MetricData {
   }
 
   @Override
-  public List<Metric> toMetricRecords() {
-    return null;
+  public String toSqlInsertString() {
+    return SQL_INSERT_PREFIX + '(' +
+      epochMillisTime + ',' +
+      deltaMillis + ',' +
+      receive + ',' +
+      send + ',' +
+      throughput + ')' + ';';
   }
 }
