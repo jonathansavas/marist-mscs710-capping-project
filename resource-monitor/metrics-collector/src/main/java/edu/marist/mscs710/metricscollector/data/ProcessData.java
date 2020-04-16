@@ -1,28 +1,49 @@
 package edu.marist.mscs710.metricscollector.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.metric.Metric;
 import edu.marist.mscs710.metricscollector.metric.MetricType;
 import edu.marist.mscs710.metricscollector.system.Processes;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Holds a snapshot of Process data.
  */
 public class ProcessData extends MetricData {
+  @JsonIgnore
   private static final long BYTES_PER_KB = 1024L;
+
+  @JsonProperty(Fields.METRIC_TYPE)
+  private static final String metricType = MetricType.PROCESSES.toString().toLowerCase();
+
+  @JsonProperty(Fields.PROCESSES_PID)
   private int pid;
+
+  @JsonProperty(Fields.PROCESSES_NAME)
   private String name;
-  private long startTime; // Unix time millis
-  private long upTime; // millis
+
+  @JsonProperty(Fields.PROCESSES_START_TIME)
+  private long startTime;
+
+  @JsonProperty(Fields.PROCESSES_UPTIME)
+  private long upTime;
+
+  @JsonProperty(Fields.PROCESSES_CPU_USAGE)
   private double cpuUsage; // During previous delta millis
+
+  @JsonProperty(Fields.PROCESSES_MEMORY)
   private long memory; // Total bytes allocated to process and in RAM
-  private long bytesRead; // Bytes read from disk during previous delta millis
-  private long bytesWritten; // During previous delta millis
+
+  @JsonProperty(Fields.PROCESSES_KB_READ)
+  private double kbRead; // kb read from disk per second during previous delta millis
+
+  @JsonProperty(Fields.PROCESSES_KB_WRITTEN)
+  private double kbWritten; // kb written to disk per second during previous delta millis
+
+  @JsonProperty(Fields.PROCESSES_STATE)
   private Processes.PidState pidState;
 
   /**
@@ -48,9 +69,9 @@ public class ProcessData extends MetricData {
     this.startTime = startTime;
     this.upTime = upTime;
     this.cpuUsage = cpuUsage;
-    this.memory = memory;
-    this.bytesRead = bytesRead;
-    this.bytesWritten = bytesWritten;
+    this.memory = memory / BYTES_PER_KB;
+    this.kbRead = ((double) bytesRead) / deltaMillis;
+    this.kbWritten = ((double) bytesWritten) / deltaMillis;
     this.deltaMillis = deltaMillis;
     this.pidState = pidState;
     this.epochMillisTime = epochMillisTime;
@@ -64,7 +85,17 @@ public class ProcessData extends MetricData {
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
   public ProcessData(int pid, String name, long epochMillisTime) {
-    this(pid, name, -1, -1, -1, -1, -1, -1, Processes.PidState.ENDED, -1, epochMillisTime);
+    this.pid = pid;
+    this.name = name;
+    this.startTime = -1;
+    this.upTime = -1;
+    this.cpuUsage = -1;
+    this.memory = -1;
+    this.kbRead = -1;
+    this.kbWritten = -1;
+    this.deltaMillis = -1;
+    this.pidState = Processes.PidState.ENDED;
+    this.epochMillisTime = epochMillisTime;
   }
 
   /**
@@ -126,8 +157,8 @@ public class ProcessData extends MetricData {
    *
    * @return bytes read
    */
-  public long getBytesRead() {
-    return bytesRead;
+  public double getKbRead() {
+    return kbRead;
   }
 
   /**
@@ -135,8 +166,8 @@ public class ProcessData extends MetricData {
    *
    * @return bytes read
    */
-  public long getBytesWritten() {
-    return bytesWritten;
+  public double getKbWritten() {
+    return kbWritten;
   }
 
   /**
@@ -157,40 +188,16 @@ public class ProcessData extends MetricData {
       ", upTime=" + upTime +
       ", cpuUsage=" + cpuUsage +
       ", memory=" + memory +
-      ", bytesRead=" + bytesRead +
-      ", bytesWritten=" + bytesWritten +
+      ", kbRead=" + kbRead +
+      ", kbWritten=" + kbWritten +
       ", pidState=" + pidState +
       ", deltaMillis=" + deltaMillis +
       ", epochMillisTime=" + epochMillisTime +
       '}';
   }
 
-  private Map<String, Object> getProcessMap() {
-    boolean isEndedState = pidState == Processes.PidState.ENDED;
-
-    long kbMemory = isEndedState ? -1 : memory / BYTES_PER_KB;
-    double kbRead = isEndedState ? -1 : ((double) bytesRead) / deltaMillis;
-    double kbWritten = isEndedState ? -1 : ((double) bytesWritten) / deltaMillis;
-
-    return new HashMap<String, Object>() {
-      {
-        put(Fields.Processes.DATETIME.toString(), epochMillisTime);
-        put(Fields.Processes.DELTA_MILLIS.toString(), deltaMillis);
-        put(Fields.Processes.PID.toString(), pid);
-        put(Fields.Processes.NAME.toString(), name);
-        put(Fields.Processes.START_TIME.toString(), startTime);
-        put(Fields.Processes.UPTIME.toString(), upTime);
-        put(Fields.Processes.CPU_USAGE.toString(), cpuUsage);
-        put(Fields.Processes.MEMORY.toString(), kbMemory);
-        put(Fields.Processes.KB_READ.toString(), kbRead);
-        put(Fields.Processes.KB_WRITTEN.toString(), kbWritten);
-        put(Fields.Processes.STATE.toString(), pidState.toString());
-      }
-    };
-  }
-
   @Override
   public List<Metric> toMetricRecords() {
-    return Collections.singletonList(new Metric(MetricType.PROCESSES, getProcessMap()));
+    return null;
   }
 }

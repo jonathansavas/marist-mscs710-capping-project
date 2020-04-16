@@ -15,8 +15,8 @@ public class KafkaUtilsTest {
   @Test
   public void testMetricSerializerDeserializer() {
     Metric before = new Metric(MetricType.SYSTEM_METRICS, new HashMap<String, Object>() {{
-      put(Fields.SystemMetrics.UPTIME.toString(), 999999);
-      put(Fields.SystemMetrics.DATETIME.toString(), 111111);
+      put(Fields.SYSTEM_METRICS_UPTIME, 999999);
+      put(Fields.SYSTEM_METRICS_DATETIME, 111111);
     }});
 
     Metric after = new MetricDeserializer().deserialize("", new MetricSerializer().serialize("", before));
@@ -24,13 +24,13 @@ public class KafkaUtilsTest {
     Assert.assertEquals(before.getMetricType(), after.getMetricType());
 
     Assert.assertEquals(
-      before.getMetricData().get(Fields.SystemMetrics.UPTIME.toString()),
-      after.getMetricData().get(Fields.SystemMetrics.UPTIME.toString())
+      before.getMetricData().get(Fields.SYSTEM_METRICS_UPTIME),
+      after.getMetricData().get(Fields.SYSTEM_METRICS_UPTIME)
     );
 
     Assert.assertEquals(
-      before.getMetricData().get(Fields.SystemMetrics.DATETIME.toString()),
-      after.getMetricData().get(Fields.SystemMetrics.DATETIME.toString())
+      before.getMetricData().get(Fields.SYSTEM_METRICS_DATETIME),
+      after.getMetricData().get(Fields.SYSTEM_METRICS_DATETIME)
     );
   }
 }

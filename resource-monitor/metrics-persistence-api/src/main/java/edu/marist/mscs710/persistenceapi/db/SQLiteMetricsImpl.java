@@ -1,6 +1,8 @@
 package edu.marist.mscs710.persistenceapi.db;
 
+import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.metric.Metric;
+import edu.marist.mscs710.metricscollector.metric.MetricType;
 import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import edu.marist.mscs710.persistenceapi.MetricsPersistenceService;
 import org.slf4j.Logger;
@@ -8,9 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -20,6 +21,14 @@ import java.util.stream.Collectors;
  */
 public class SQLiteMetricsImpl implements MetricsPersistenceService {
   private static final Logger LOGGER = LoggerFactory.getLogger(SQLiteMetricsImpl.class);
+
+  private static final String DATETIME = "datetime";
+  private static final String HOUR = "hour";
+  private static final String MINUTE = "minute";
+
+  private static final long ONE_MIN_MS = 1000 * 60;
+  private static final long ONE_HOUR_MS = ONE_MIN_MS * 60;
+  private static final long PRUNE_ELIGIBILITY_MS = ONE_HOUR_MS * 12;
 
   private String dbUrl;
   private List<String> metricTypes;
@@ -150,4 +159,66 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       }
     }
   }
+
+  private List<Metric> basicPrune(Map<String, List<Metric>> batchedRecords) {
+    List<Metric> prunedMetrics = new ArrayList<>();
+    List<Metric> snapshotBucket = new ArrayList<>();
+
+    long bound = (long) batchedRecords.get(HOUR).get(0).getMetricData().get(DATETIME) + ONE_HOUR_MS;
+    for (Metric metric : batchedRecords.get(HOUR)) {
+      long datetime = (long) metric.getMetricData().get(DATETIME);
+      if (datetime < bound) {
+        snapshotBucket.add(metric);
+      } else {
+        bound =
+      }
+    }
+  }
+
+  private Map<String, List<Metric>> getRecordsBySnapshotInterval(long earliest, long latest, MetricType type) {
+    try (Connection conn = getSqliteConnection()) {
+      ResultSet rs = getRecordsToPrune(earliest, latest, type.toString().toLowerCase(), conn);
+
+      List<String> fields = metricFields.get(type);
+      long bound = latest - PRUNE_ELIGIBILITY_MS;
+      List<Metric> minuteRecords = new ArrayList<>();
+      List<Metric> hourRecords = new ArrayList<>();
+
+      while (rs.next()) {
+        Map<String, Object> record = new HashMap<>();
+        for (String field : fields) {
+          record.put(field.toUpperCase(), rs.getObject(field));
+        }
+
+        if (rs.getLong(DATETIME) < bound)
+          hourRecords.add(new Metric(type, record));
+        else
+          minuteRecords.add(new Metric(type, record));
+      }
+
+      return new HashMap<String, List<Metric>>() {{
+        put(HOUR, hourRecords);
+        put(MINUTE, minuteRecords);
+      }};
+
+    } catch (SQLException e) {
+      LoggerUtils.getExceptionMessage(e);
+      return new HashMap<>();
+    }
+  }
+
+  private static ResultSet getRecordsToPrune(long earliest, long latest, String table, Connection conn) throws SQLException {
+    // Earliest is inclusive and latest is exclusive
+    return conn.createStatement()
+      .executeQuery(
+        "SELECT * FROM " + table +
+        " WHERE datetime BETWEEN " + earliest + " AND " + (latest - 1) /*+
+          " ORDER BY datetime ASC;"*/);
+  }
+
+  private static long getPruneUpperBound() {
+    // Exclusive upper bound
+    return Instant.now().toEpochMilli() - PRUNE_ELIGIBILITY_MS;
+  }
+
 }

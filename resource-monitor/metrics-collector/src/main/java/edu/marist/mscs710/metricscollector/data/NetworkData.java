@@ -1,23 +1,28 @@
 package edu.marist.mscs710.metricscollector.data;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.metric.Metric;
-import edu.marist.mscs710.metricscollector.metric.MetricType;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Holds a snapshot of Network data.
  */
 public class NetworkData extends MetricData {
+
   private static final long BITS_PER_KILOBIT = 1000L;
+
   private static final int BITS_PER_BYTE = 8;
-  private long bytesSent; // During delta millis
-  private long bytesRecv; // During delta millis
-  private long speed; // Bits per second network capacity, sum over active network interfaces
+
+  @JsonProperty(Fields.NETWORK_SEND)
+  private double send; // During delta millis
+
+  @JsonProperty(Fields.NETWORK_RECEIVE)
+  private double receive; // During delta millis
+
+  @JsonProperty(Fields.NETWORK_THROUGHPUT)
+  private long throughput; // Bits per second network capacity, sum over active network interfaces
 
   /**
    * Constructs a new <tt>NetworkData</tt> with the supplied metrics.
@@ -29,9 +34,9 @@ public class NetworkData extends MetricData {
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
   public NetworkData(long bytesSent, long bytesRecv, long speed, long deltaMillis, long epochMillisTime) {
-    this.bytesSent = bytesSent;
-    this.bytesRecv = bytesRecv;
-    this.speed = speed;
+    this.send = ((double) bytesSent) / deltaMillis * BITS_PER_BYTE;
+    this.receive = ((double) bytesRecv) / deltaMillis * BITS_PER_BYTE;
+    this.throughput = speed / BITS_PER_KILOBIT;
     this.deltaMillis = deltaMillis;
     this.epochMillisTime = epochMillisTime;
   }
@@ -41,8 +46,8 @@ public class NetworkData extends MetricData {
    *
    * @return number of bytes
    */
-  public long getBytesSent() {
-    return bytesSent;
+  public double getSend() {
+    return send;
   }
 
   /**
@@ -50,8 +55,8 @@ public class NetworkData extends MetricData {
    *
    * @return number of bytes
    */
-  public long getBytesRecv() {
-    return bytesRecv;
+  public double getReceive() {
+    return receive;
   }
 
   /**
@@ -60,35 +65,23 @@ public class NetworkData extends MetricData {
    *
    * @return speed in bits per second
    */
-  public long getSpeed() {
-    return speed;
+  public long getThroughput() {
+    return throughput;
   }
 
   @Override
   public String toString() {
     return "NetworkData{" +
-      "bytesSent=" + bytesSent +
-      ", bytesRecv=" + bytesRecv +
-      ", speed=" + speed +
+      "send=" + send +
+      ", receive=" + receive +
+      ", throughput=" + throughput +
       ", deltaMillis=" + deltaMillis +
       ", epochMillisTime=" + epochMillisTime +
       '}';
   }
 
-  private Map<String, Object> getNetworkMap() {
-    return new HashMap<String, Object>() {
-      {
-        put(Fields.Network.DATETIME.toString(), epochMillisTime);
-        put(Fields.Network.DELTA_MILLIS.toString(), deltaMillis);
-        put(Fields.Network.THROUGHPUT.toString(), speed / BITS_PER_KILOBIT);
-        put(Fields.Network.SEND.toString(), ((double) bytesSent) / deltaMillis * BITS_PER_BYTE);
-        put(Fields.Network.RECEIVE.toString(), ((double) bytesRecv) / deltaMillis * BITS_PER_BYTE);
-      }
-    };
-  }
-
   @Override
   public List<Metric> toMetricRecords() {
-    return Collections.singletonList(new Metric(MetricType.NETWORK, getNetworkMap()));
+    return null;
   }
 }

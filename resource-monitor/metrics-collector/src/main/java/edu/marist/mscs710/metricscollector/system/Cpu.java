@@ -1,17 +1,16 @@
 package edu.marist.mscs710.metricscollector.system;
 
 import edu.marist.mscs710.metricscollector.MetricSource;
+import edu.marist.mscs710.metricscollector.data.CpuCoreData;
 import edu.marist.mscs710.metricscollector.data.CpuData;
+import edu.marist.mscs710.metricscollector.data.MetricData;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.Sensors;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.OptionalDouble;
+import java.util.*;
 
 /**
  * Represents a CPU of an operating system. Produces metrics on demand, keeping
@@ -51,17 +50,22 @@ public class Cpu implements MetricSource {
   }
 
   @Override
-  public List<CpuData> getMetricData() {
+  public List<MetricData> getMetricData() {
     double[] cpuCoreUsages = getCpuCoreUsageSinceLastCheck();
 
     long curMillis = Instant.now().toEpochMilli();
     long deltaMillis = curMillis - lastCheckInMillis;
     lastCheckInMillis = curMillis;
 
-    return Collections.singletonList(
-      new CpuData(cpuCoreUsages, getTotalCpuUsage(cpuCoreUsages),
-        getCpuTemp(), deltaMillis, curMillis)
-    );
+    List<MetricData> metrics = new ArrayList<>();
+
+    metrics.add(new CpuData(getTotalCpuUsage(cpuCoreUsages), getCpuTemp(), deltaMillis, curMillis));
+
+    for (int i = 0; i < cpuCoreUsages.length; i++) {
+      metrics.add(new CpuCoreData(i, cpuCoreUsages[i], deltaMillis, curMillis));
+    }
+
+    return metrics;
   }
 
   private double[] getCpuCoreUsageSinceLastCheck() {

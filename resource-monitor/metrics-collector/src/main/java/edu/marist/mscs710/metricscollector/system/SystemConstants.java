@@ -1,33 +1,43 @@
 package edu.marist.mscs710.metricscollector.system;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.marist.mscs710.metricscollector.MetricRecord;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.metric.Metric;
-import edu.marist.mscs710.metricscollector.metric.MetricType;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Class to hold the constant values for a particular system.
  */
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME,
+  property = Fields.METRIC_TYPE
+)
+@JsonTypeName(Fields.METRIC_TYPE_SYSTEM_CONSTANTS)
 public class SystemConstants implements MetricRecord {
-  private static long totalMemBytes;
-  private static double totalMemGb;
-  private static int physicalCores;
-  private static int logicalCores;
-  private static double cpuSpeed;
+
+  @JsonProperty(Fields.SYSTEM_CONSTANTS_TOTAL_MEMORY)
+  private double totalMemGb;
+
+  @JsonProperty(Fields.SYSTEM_CONSTANTS_PHYSICAL_CORES)
+  private int physicalCores;
+
+  @JsonProperty(Fields.SYSTEM_CONSTANTS_LOGICAL_CORES)
+  private int logicalCores;
+
+  @JsonProperty(Fields.SYSTEM_CONSTANTS_CPU_SPEED)
+  private double cpuSpeed;
 
   /**
    * Constructs a new <tt>SystemConstants</tt>
    */
   public SystemConstants() {
     Memory mem = new Memory();
-    totalMemBytes = mem.getTotalMemoryInBytes();
     totalMemGb = mem.getTotalMemoryInGb();
 
     cpuSpeed = new Cpu(true).getCpuSpeed();
@@ -37,13 +47,11 @@ public class SystemConstants implements MetricRecord {
     logicalCores = processor.getLogicalProcessorCount();
   }
 
-  /**
-   * Gets the total memory of the system, in bytes.
-   *
-   * @return total memory
-   */
-  public static long getTotalMemBytes() {
-    return totalMemBytes;
+  public SystemConstants(double totalMemGb, int physicalCores, int logicalCores, double cpuSpeed) {
+    this.totalMemGb = totalMemGb;
+    this.physicalCores = physicalCores;
+    this.logicalCores = logicalCores;
+    this.cpuSpeed = cpuSpeed;
   }
 
   /**
@@ -51,7 +59,7 @@ public class SystemConstants implements MetricRecord {
    *
    * @return total memory
    */
-  public static double getTotalMemGb() {
+  public double getTotalMemGb() {
     return totalMemGb;
   }
 
@@ -60,7 +68,7 @@ public class SystemConstants implements MetricRecord {
    *
    * @return number of physical cores
    */
-  public static int getPhysicalCores() {
+  public int getPhysicalCores() {
     return physicalCores;
   }
 
@@ -69,7 +77,7 @@ public class SystemConstants implements MetricRecord {
    *
    * @return number of logical cores
    */
-  public static int getLogicalCores() {
+  public int getLogicalCores() {
     return logicalCores;
   }
 
@@ -78,23 +86,12 @@ public class SystemConstants implements MetricRecord {
    *
    * @return processor speed
    */
-  public static double getCpuSpeed() {
+  public double getCpuSpeed() {
     return cpuSpeed;
-  }
-
-  private Map<String, Object> getSystemConstantMap() {
-    return new HashMap<String, Object>() {
-      {
-        put(Fields.SystemConstants.CPU_SPEED.toString(), cpuSpeed);
-        put(Fields.SystemConstants.LOGICAL_CORES.toString(), logicalCores);
-        put(Fields.SystemConstants.PHYSICAL_CORES.toString(), physicalCores);
-        put(Fields.SystemConstants.TOTAL_MEMORY.toString(), totalMemGb);
-      }
-    };
   }
 
   @Override
   public List<Metric> toMetricRecords() {
-    return Collections.singletonList(new Metric(MetricType.SYSTEM_CONSTANTS, getSystemConstantMap()));
+    return null;
   }
 }

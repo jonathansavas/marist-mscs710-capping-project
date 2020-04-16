@@ -1,20 +1,21 @@
 package edu.marist.mscs710.metricscollector.data;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.metric.Metric;
-import edu.marist.mscs710.metricscollector.metric.MetricType;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Holds a snapshot of Memory data.
  */
 public class MemoryData extends MetricData {
+
+  @JsonProperty(Fields.MEMORY_UTILIZATION)
   private double memoryUtilization; // Pct memory in use
-  private long pageFaults; // during time span delta millis
+
+  @JsonProperty(Fields.MEMORY_PAGE_FAULTS)
+  private double pageFaults; // during time span delta millis
 
   /**
    * Constructs a new <tt>MemoryData</tt> with the supplied metrics.
@@ -26,7 +27,7 @@ public class MemoryData extends MetricData {
    */
   public MemoryData(double memoryUtilization, long pageFaults, long deltaMillis, long epochMillisTime) {
     this.memoryUtilization = memoryUtilization;
-    this.pageFaults = pageFaults;
+    this.pageFaults = ((double) pageFaults) / deltaMillis * 1000.0;
     this.deltaMillis = deltaMillis;
     this.epochMillisTime = epochMillisTime;
   }
@@ -45,7 +46,7 @@ public class MemoryData extends MetricData {
    *
    * @return number of page faults
    */
-  public long getPageFaults() {
+  public double getPageFaults() {
     return pageFaults;
   }
 
@@ -59,19 +60,8 @@ public class MemoryData extends MetricData {
       '}';
   }
 
-  private Map<String, Object> getMemoryMap() {
-    return new HashMap<String, Object>() {
-      {
-        put(Fields.Memory.DATETIME.toString(), epochMillisTime);
-        put(Fields.Memory.DELTA_MILLIS.toString(), deltaMillis);
-        put(Fields.Memory.UTILIZATION.toString(), memoryUtilization);
-        put(Fields.Memory.PAGE_FAULTS.toString(), ((double) pageFaults) / deltaMillis * 1000.0);
-      }
-    };
-  }
-
   @Override
   public List<Metric> toMetricRecords() {
-    return Collections.singletonList(new Metric(MetricType.MEMORY, getMemoryMap()));
+    return null;
   }
 }

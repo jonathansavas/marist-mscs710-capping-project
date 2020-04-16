@@ -1,8 +1,6 @@
 package edu.marist.mscs710.metricscollector;
 
-import edu.marist.mscs710.metricscollector.data.MemoryData;
-import edu.marist.mscs710.metricscollector.data.NetworkData;
-import edu.marist.mscs710.metricscollector.data.ProcessData;
+import edu.marist.mscs710.metricscollector.data.*;
 import edu.marist.mscs710.metricscollector.system.Cpu;
 import edu.marist.mscs710.metricscollector.system.Memory;
 import edu.marist.mscs710.metricscollector.system.Network;
@@ -30,11 +28,15 @@ public class TestMetrics {
 
     Thread.sleep(300);
 
-    double[] perCoreCpuUsages = cpu.getMetricData().get(0).getCpuCoreUsages();
+    List<Double> perCoreCpuUsages= cpu.getMetricData().stream()
+      .filter(m -> m instanceof CpuCoreData)
+      .map(m -> ((CpuCoreData) m).getCoreUtilization())
+      .collect(Collectors.toList());
+
 
     int numPhysCores = new SystemInfo().getHardware().getProcessor().getPhysicalProcessorCount();
 
-    Assert.assertEquals(numPhysCores, perCoreCpuUsages.length);
+    Assert.assertEquals(numPhysCores, perCoreCpuUsages.size());
 
     for (double pct : perCoreCpuUsages) {
       Assert.assertTrue(pct >= 0 && pct <= 1);
@@ -81,7 +83,7 @@ public class TestMetrics {
       NetworkData netData = network.getMetricData().get(0);
 
       System.out.println(String.format("Bytes Sent: %s, bytes recv: %s, bit / s: %s, delta millis: %s",
-        netData.getBytesSent(), netData.getBytesRecv(), netData.getSpeed(), netData.getDeltaMillis()));
+        netData.getSend(), netData.getReceive(), netData.getThroughput(), netData.getDeltaMillis()));
 
       Thread.sleep(2000);
       for (NetworkIF n : nets)

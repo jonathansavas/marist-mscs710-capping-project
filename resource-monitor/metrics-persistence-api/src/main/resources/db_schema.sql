@@ -69,8 +69,9 @@ CREATE TABLE IF NOT EXISTS system_constants (
 );
 
 CREATE TABLE IF NOT EXISTS system_metrics (
-    datetime BIGINT NOT NULL PRIMARY KEY,
-    uptime   BIGINT NOT NULL
+    datetime     BIGINT NOT NULL PRIMARY KEY,
+    delta_millis BIGINT NOT NULL,
+    uptime       BIGINT NOT NULL
 );
 
 PRAGMA foreign_keys = on;

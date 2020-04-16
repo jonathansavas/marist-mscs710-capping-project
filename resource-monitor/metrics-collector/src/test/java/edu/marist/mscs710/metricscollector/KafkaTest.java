@@ -38,8 +38,8 @@ public class KafkaTest {
   @Test
   public void testMetricSerializerDeserializerViaKafka() {
     Metric before = new Metric(MetricType.SYSTEM_METRICS, new HashMap<String, Object>() {{
-      put(Fields.SystemMetrics.UPTIME.toString(), 999999);
-      put(Fields.SystemMetrics.DATETIME.toString(), 111111);
+      put(Fields.SYSTEM_METRICS_UPTIME, 999999);
+      put(Fields.SYSTEM_METRICS_DATETIME, 111111);
     }});
 
     KafkaTestUtils k = kafka.getKafkaTestUtils();
@@ -61,13 +61,13 @@ public class KafkaTest {
     Assert.assertEquals(before.getMetricType(), after.getMetricType());
 
     Assert.assertEquals(
-      before.getMetricData().get(Fields.SystemMetrics.UPTIME.toString()),
-      after.getMetricData().get(Fields.SystemMetrics.UPTIME.toString())
+      before.getMetricData().get(Fields.SYSTEM_METRICS_UPTIME),
+      after.getMetricData().get(Fields.SYSTEM_METRICS_UPTIME)
     );
 
     Assert.assertEquals(
-      before.getMetricData().get(Fields.SystemMetrics.DATETIME.toString()),
-      after.getMetricData().get(Fields.SystemMetrics.DATETIME.toString())
+      before.getMetricData().get(Fields.SYSTEM_METRICS_DATETIME),
+      after.getMetricData().get(Fields.SYSTEM_METRICS_DATETIME)
     );
   }
 
@@ -77,15 +77,15 @@ public class KafkaTest {
     List<String> brokers = Collections.singletonList(kafkaBroker);
     MetricsProducer os = new OSMetricsProducer(brokers, topic);
 
-    Map<MetricType, Set<String>> metricsFields = new HashMap<MetricType, Set<String>>() {
+    Map<MetricType, Collection<String>> metricsFields = new HashMap<MetricType, Collection<String>>() {
       {
-        put(MetricType.CPU, toStringSet(Fields.Cpu.values()));
-        put(MetricType.CPU_CORE, toStringSet(Fields.CpuCore.values()));
-        put(MetricType.MEMORY, toStringSet(Fields.Memory.values()));
-        put(MetricType.NETWORK, toStringSet(Fields.Network.values()));
-        put(MetricType.PROCESSES, toStringSet(Fields.Processes.values()));
-        put(MetricType.SYSTEM_CONSTANTS, toStringSet(Fields.SystemConstants.values()));
-        put(MetricType.SYSTEM_METRICS, toStringSet(Fields.SystemMetrics.values()));
+        put(MetricType.CPU, Fields.CPU_FIELDS);
+        put(MetricType.CPU_CORE, Fields.CPU_CORE_FIELDS);
+        put(MetricType.MEMORY, Fields.MEMORY_FIELDS);
+        put(MetricType.NETWORK, Fields.NETWORK_FIELDS);
+        put(MetricType.PROCESSES, Fields.PROCESSES_FIELDS);
+        put(MetricType.SYSTEM_CONSTANTS, Fields.SYSTEM_CONSTANTS_FIELDS);
+        put(MetricType.SYSTEM_METRICS, Fields.SYSTEM_METRICS_FIELDS);
       }
     };
 
@@ -115,7 +115,7 @@ public class KafkaTest {
       Assert.assertNotSame(metric.getMetricType(), MetricType.NULL);
       MetricType type = metric.getMetricType();
       Map<String, Object> metricData = metric.getMetricData();
-      Set<String> fields = metricsFields.get(type);
+      Collection<String> fields = metricsFields.get(type);
 
       for (String field : metricData.keySet()) {
         Assert.assertTrue(fields.contains(field));

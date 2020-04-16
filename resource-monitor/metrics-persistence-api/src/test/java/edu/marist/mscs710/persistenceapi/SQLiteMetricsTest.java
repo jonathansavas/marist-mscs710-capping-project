@@ -175,7 +175,7 @@ public class SQLiteMetricsTest {
     Metric network = new Metric(MetricType.NETWORK, new HashMap<String, Object>() {{
       put(Fields.Network.DATETIME.toString(), 1L);
       put(Fields.Network.DELTA_MILLIS.toString(), 1L);
-      put(Fields.Network.THROUGHPUT.toString(), 1.0);
+      put(Fields.Network.THROUGHPUT.toString(), 1);
       put(Fields.Network.SEND.toString(), 1.0);
       put(Fields.Network.RECEIVE.toString(), 1.0);
     }});
@@ -188,7 +188,7 @@ public class SQLiteMetricsTest {
 
       Assert.assertEquals(1, rs.getLong("datetime"));
       Assert.assertEquals(1, rs.getLong("delta_millis"));
-      Assert.assertEquals(1.0, rs.getDouble("throughput"), 0.0);
+      Assert.assertEquals(1, rs.getLong("throughput"));
       Assert.assertEquals(1.0, rs.getDouble("send"), 0.0);
       Assert.assertEquals(1.0, rs.getDouble("receive"), 0.0);
     }
