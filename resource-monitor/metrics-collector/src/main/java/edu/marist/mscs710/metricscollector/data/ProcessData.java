@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.system.Processes;
 
+import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverage;
+
+import java.util.*;
+
 /**
  * Holds a snapshot of Process data.
  */
@@ -210,6 +214,14 @@ public class ProcessData extends MetricData {
     return pidState;
   }
 
+  /**
+   * Sets the state of the process.
+   * @param pidState process state
+   */
+  public void setPidState(Processes.PidState pidState) {
+    this.pidState = pidState;
+  }
+
   @Override
   public String toString() {
     return "ProcessData{" +
@@ -241,5 +253,76 @@ public class ProcessData extends MetricData {
       kbRead + ',' +
       kbWritten + ',' +
       '\'' + pidState + '\'' + ')' + ';';
+  }
+
+  public static List<ProcessData> combine(List<ProcessData> metrics) {
+    List<ProcessData> sortedMetrics = sortChronologically(metrics);
+
+    List<ProcessData> combinedMetrics = new ArrayList<>();
+    Map<Integer, List<ProcessData>> metricsByPid = new HashMap<>();
+
+    for (ProcessData data : sortedMetrics) {
+      switch (data.getPidState()) {
+        case NEW:
+        case RECYCLED:
+          ProcessData combined = combineSameProcessMetrics(
+            metricsByPid.get(data.getPid())
+          );
+
+          if (combined != null)
+            combinedMetrics.add(combined);
+
+          metricsByPid.put(data.getPid(), new ArrayList<>(Collections.singleton(data)));
+          break;
+        case RUNNING:
+          metricsByPid.computeIfAbsent(data.getPid(), ArrayList::new).add(data);
+          break;
+        case ENDED:
+          combinedMetrics.add(data);
+          break;
+      }
+    }
+
+    for (List<ProcessData> sameProcessMetrics : metricsByPid.values()) {
+      ProcessData combined = combineSameProcessMetrics(sameProcessMetrics);
+
+      if (combined != null)
+        combinedMetrics.add(combined);
+    }
+
+    return sortChronologically(combinedMetrics);
+  }
+
+  private static ProcessData combineSameProcessMetrics(List<ProcessData> sameProcessMetrics) {
+    if (sameProcessMetrics == null || sameProcessMetrics.isEmpty())
+      return null;
+
+    ProcessData first = sameProcessMetrics.get(0);
+
+    int pid = first.getPid();
+    String name = first.getName();
+    long startTime = first.getStartTime();
+    Processes.PidState pidState = first.getPidState();
+
+    long datetime = 0;
+    long totalMillis = 0;
+    long upTime = 0;
+    double cpuUsage = 0;
+    long memory = 0;
+    double kbRead = 0;
+    double kbWritten = 0;
+
+    for (ProcessData data : sameProcessMetrics) {
+      long deltaMillis = data.getDeltaMillis();
+      datetime = weightedAverage(datetime, totalMillis, data.getEpochMillisTime(), deltaMillis);
+      upTime = weightedAverage(upTime, totalMillis, data.getUpTime(), deltaMillis);
+      cpuUsage = weightedAverage(cpuUsage, totalMillis, data.getCpuUsage(), deltaMillis);
+      memory = weightedAverage(memory, totalMillis, data.getMemory(), deltaMillis);
+      kbRead = weightedAverage(kbRead, totalMillis, data.getKbRead(), deltaMillis);
+      kbWritten = weightedAverage(kbWritten, totalMillis, data.getKbWritten(), deltaMillis);
+      totalMillis += deltaMillis;
+    }
+
+    return new ProcessData(pid, name, startTime, upTime, cpuUsage, memory, kbRead, kbWritten, pidState, totalMillis, datetime);
   }
 }

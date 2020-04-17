@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 
+import java.util.List;
+
+import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverage;
+
 /**
  * Holds a snapshot of Network data.
  */
@@ -106,5 +110,24 @@ public class NetworkData extends MetricData {
       receive + ',' +
       send + ',' +
       throughput + ')' + ';';
+  }
+
+  public static NetworkData combine(List<NetworkData> metrics) {
+    long datetime = 0;
+    long totalMillis = 0;
+    double send = 0.0;
+    double receive = 0.0;
+    long throughput = 0;
+
+    for (NetworkData data : metrics) {
+      long deltaMillis = data.getDeltaMillis();
+      datetime = weightedAverage(datetime, totalMillis, data.getEpochMillisTime(), deltaMillis);
+      send = weightedAverage(send, totalMillis, data.getSend(), deltaMillis);
+      receive = weightedAverage(receive, totalMillis, data.getReceive(), deltaMillis);
+      throughput = weightedAverage(throughput, totalMillis, data.getThroughput(), deltaMillis);
+      totalMillis += deltaMillis;
+    }
+
+    return new NetworkData(send, receive, throughput, totalMillis, datetime);
   }
 }

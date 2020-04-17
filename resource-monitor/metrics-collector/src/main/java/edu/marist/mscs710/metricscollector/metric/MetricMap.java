@@ -77,11 +77,11 @@ public class MetricMap {
     return new Metric(metrics.get(0).getMetricType(), )
   }*/
 
-  private static long weightedAverage(long agg, long wAgg, long val, long wVal) {
-    return (long) (agg + (val - agg) * ((double) wVal / (wVal + wAgg)));
+  private static long weightedAverage(long agg, long wAgg, long val, double wVal) {
+    return (long) (agg + (val - agg) * (wVal / (wVal + wAgg)));
   }
 
   private static double weightedAverage(double agg, double wAgg, double val, double wVal) {
-    return agg + (val - agg) * ( wVal / (wVal + wAgg));
+    return agg + (val - agg) * (wVal / (wVal + wAgg));
   }
 }

@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 
+import java.util.List;
+
+import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverage;
+
 /**
  * Holds a snapshot of Memory data.
  */
@@ -82,5 +86,22 @@ public class MemoryData extends MetricData {
       deltaMillis + ',' +
       pageFaults + ',' +
       memoryUtilization + ')' + ';';
+  }
+
+  public static MemoryData combine(List<MemoryData> metrics) {
+    long datetime = 0;
+    long totalMillis = 0;
+    double utilization = 0.0;
+    double pageFaults = 0.0;
+
+    for (MemoryData data : metrics) {
+      long deltaMillis = data.getDeltaMillis();
+      datetime = weightedAverage(datetime, totalMillis, data.getEpochMillisTime(), deltaMillis);
+      utilization = weightedAverage(utilization, totalMillis, data.getMemoryUtilization(), deltaMillis);
+      pageFaults = weightedAverage(pageFaults, totalMillis, data.getPageFaults(), deltaMillis);
+      totalMillis += deltaMillis;
+    }
+
+    return new MemoryData(utilization, pageFaults, totalMillis, datetime);
   }
 }

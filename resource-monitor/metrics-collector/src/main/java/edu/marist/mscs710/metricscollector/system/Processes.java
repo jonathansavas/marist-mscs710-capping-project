@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
  * on demand, keeping the previous state of the processes.
  */
 public class Processes implements MetricSource {
+  private boolean updated = false;
   private final int numLogicalCores;
   private OperatingSystem os;
   private Map<Integer, OSProcess> priorProcSnapshots;
@@ -71,11 +72,18 @@ public class Processes implements MetricSource {
         dataList.add(pData);
     }
 
-    for (OSProcess endedProc : priorProcSnapshots.values()) {
-      dataList.add(new ProcessData(
-        endedProc.getProcessID(),
-        endedProc.getName(),
-        Instant.now().toEpochMilli()));
+    if (updated) {
+      for (OSProcess endedProc : priorProcSnapshots.values()) {
+        dataList.add(new ProcessData(
+          endedProc.getProcessID(),
+          endedProc.getName(),
+          Instant.now().toEpochMilli()));
+      }
+    } else { // On first update, all processes are NEW
+      for (ProcessData pData : dataList)
+        pData.setPidState(PidState.NEW);
+
+      updated = true;
     }
 
     updateProcessSnapshots(osProcesses);

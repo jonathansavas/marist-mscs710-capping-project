@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 
+import java.util.List;
+
+import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverage;
+
 /**
  * Holds a snapshot of System data.
  */
@@ -57,5 +61,20 @@ public class SystemData extends MetricData {
       epochMillisTime + ',' +
       deltaMillis + ',' +
       upTime + ')' + ';';
+  }
+
+  public static SystemData combine(List<SystemData> metrics) {
+    long datetime = 0;
+    long totalMillis = 0;
+    long upTime = 0;
+
+    for (SystemData data : metrics) {
+      long deltaMillis = data.getDeltaMillis();
+      datetime = weightedAverage(datetime, totalMillis, data.getEpochMillisTime(), deltaMillis);
+      upTime = weightedAverage(upTime, totalMillis, data.getUpTime(), deltaMillis);
+      totalMillis += deltaMillis;
+    }
+
+    return new SystemData(upTime, totalMillis, datetime);
   }
 }

@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 
+import java.util.List;
+
+import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverage;
+
 /**
  * Holds a snapshot of CPU data. CPU usage metrics are given as percent
  * utilization from 0.0-1.0.
@@ -77,5 +81,22 @@ public class CpuData extends MetricData {
       deltaMillis + ',' +
       utilization + ',' +
       temperature + ')' + ';';
+  }
+
+  public static CpuData combine(List<CpuData> metrics) {
+    long datetime = 0;
+    long totalMillis = 0;
+    double utilization = 0;
+    double temperature = 0;
+
+    for (CpuData data : metrics) {
+      long deltaMillis = data.getDeltaMillis();
+      datetime = weightedAverage(datetime, totalMillis, data.getEpochMillisTime(), deltaMillis);
+      utilization = weightedAverage(utilization, totalMillis, data.getUtilization(), deltaMillis);
+      temperature = weightedAverage(temperature, totalMillis, data.getTemperature(), deltaMillis);
+      totalMillis += deltaMillis;
+    }
+
+    return new CpuData(utilization, temperature, totalMillis, datetime);
   }
 }

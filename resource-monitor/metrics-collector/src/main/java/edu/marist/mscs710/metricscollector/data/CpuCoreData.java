@@ -4,6 +4,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverage;
+
 public class CpuCoreData extends MetricData {
   public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
     Fields.METRIC_TYPE_CPU_CORE + " (" +
@@ -55,5 +62,30 @@ public class CpuCoreData extends MetricData {
       deltaMillis + ',' +
       coreUtilization + ',' +
       coreId + ')' + ';';
+  }
+
+  public static List<CpuCoreData> combine(List<CpuCoreData> metrics) {
+    Map<Integer, List<CpuCoreData>> metricsById = metrics.stream()
+      .collect(Collectors.groupingBy(CpuCoreData::getCoreId, Collectors.toList()));
+
+    List<CpuCoreData> combinedMetrics = new ArrayList<>();
+
+    for (Map.Entry<Integer, List<CpuCoreData>> entry : metricsById.entrySet()) {
+      int coreId = entry.getKey();
+      long datetime = 0;
+      long totalMillis = 0;
+      double coreUtilization = 0.0;
+
+      for (CpuCoreData data : entry.getValue()) {
+        long deltaMillis = data.getDeltaMillis();
+        datetime = weightedAverage(datetime, totalMillis, data.getEpochMillisTime(), deltaMillis);
+        coreUtilization = weightedAverage(coreUtilization, totalMillis, data.getCoreUtilization(), deltaMillis);
+        totalMillis += deltaMillis;
+      }
+
+      combinedMetrics.add(new CpuCoreData(coreId, coreUtilization, totalMillis, datetime));
+    }
+
+    return combinedMetrics;
   }
 }
