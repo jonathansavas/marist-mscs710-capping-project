@@ -1,6 +1,7 @@
 package edu.marist.mscs710.metricscollector.data;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 
@@ -12,6 +13,7 @@ import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverag
  * Holds a snapshot of CPU data. CPU usage metrics are given as percent
  * utilization from 0.0-1.0.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CpuData extends MetricData {
   public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
     Fields.METRIC_TYPE_CPU + " (" +
@@ -72,6 +74,17 @@ public class CpuData extends MetricData {
       ", deltaMillis=" + deltaMillis +
       ", epochMillisTime=" + epochMillisTime +
       '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    CpuData that = (CpuData) o;
+    return Double.compare(that.utilization, utilization) == 0 &&
+      Double.compare(that.temperature, temperature) == 0 &&
+      deltaMillis == that.deltaMillis &&
+      epochMillisTime == that.epochMillisTime;
   }
 
   @Override

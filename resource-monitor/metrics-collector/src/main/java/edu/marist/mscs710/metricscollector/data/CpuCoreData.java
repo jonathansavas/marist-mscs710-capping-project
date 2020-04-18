@@ -1,6 +1,7 @@
 package edu.marist.mscs710.metricscollector.data;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverage;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CpuCoreData extends MetricData {
   public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
     Fields.METRIC_TYPE_CPU_CORE + " (" +
@@ -54,6 +56,16 @@ public class CpuCoreData extends MetricData {
       '}';
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    CpuCoreData that = (CpuCoreData) o;
+    return coreId == that.coreId &&
+      Double.compare(that.coreUtilization, coreUtilization) == 0&&
+      deltaMillis == that.deltaMillis &&
+      epochMillisTime == that.epochMillisTime;
+  }
 
   @Override
   public String toSqlInsertString() {

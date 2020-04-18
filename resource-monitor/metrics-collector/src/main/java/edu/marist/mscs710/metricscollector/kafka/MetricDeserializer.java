@@ -1,5 +1,6 @@
 package edu.marist.mscs710.metricscollector.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.marist.mscs710.metricscollector.Metric;
@@ -7,7 +8,6 @@ import edu.marist.mscs710.metricscollector.data.*;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.metric.NullMetric;
 import edu.marist.mscs710.metricscollector.system.SystemConstants;
-import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Class to deserialize <tt>Metric</tt> objects from Kafka.
+ * Class to deserialize <tt>Metric</tt> objects from Kafka. This class is
+ * not thread safe.
  */
 public class MetricDeserializer implements Deserializer<Metric> {
   private static final Logger LOGGER = LoggerFactory.getLogger(MetricDeserializer.class);
@@ -48,10 +49,18 @@ public class MetricDeserializer implements Deserializer<Metric> {
       if (clazz == null)
         return new NullMetric();
 
-      return objectMapper.treeToValue(json, clazz);
+      return deserialize(json, clazz);
     } catch (IOException ex) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(ex));
+      LOGGER.error(ex.getMessage(), ex);
       return new NullMetric();
     }
+  }
+
+  public <T extends Metric> T deserialize(JsonNode json, Class<T> clazz) throws JsonProcessingException {
+    return objectMapper.treeToValue(json, clazz);
+  }
+
+  public Class<? extends Metric> lookupMetricClass(String metricType) {
+    return metricTypes.get(metricType);
   }
 }

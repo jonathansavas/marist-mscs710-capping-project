@@ -1,9 +1,6 @@
 package edu.marist.mscs710.metricscollector.system;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
 import edu.marist.mscs710.metricscollector.Metric;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import oshi.SystemInfo;
@@ -17,6 +14,7 @@ import oshi.hardware.CentralProcessor;
   property = Fields.METRIC_TYPE
 )
 @JsonTypeName(Fields.METRIC_TYPE_SYSTEM_CONSTANTS)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SystemConstants implements Metric {
   public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
     Fields.METRIC_TYPE_SYSTEM_CONSTANTS + " (" +
@@ -98,6 +96,26 @@ public class SystemConstants implements Metric {
     return cpuSpeed;
   }
 
+  @Override
+  public String toString() {
+    return "SystemConstants{" +
+      "totalMemGb=" + totalMemGb +
+      ", physicalCores=" + physicalCores +
+      ", logicalCores=" + logicalCores +
+      ", cpuSpeed=" + cpuSpeed +
+      '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    SystemConstants that = (SystemConstants) o;
+    return Double.compare(that.totalMemGb, totalMemGb) == 0 &&
+      physicalCores == that.physicalCores &&
+      logicalCores == that.logicalCores &&
+      Double.compare(that.cpuSpeed, cpuSpeed) == 0;
+  }
 
   @Override
   public String toSqlInsertString() {

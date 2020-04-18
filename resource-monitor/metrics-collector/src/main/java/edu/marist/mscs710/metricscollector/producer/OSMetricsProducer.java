@@ -5,7 +5,6 @@ import edu.marist.mscs710.metricscollector.MetricsProducer;
 import edu.marist.mscs710.metricscollector.data.MetricData;
 import edu.marist.mscs710.metricscollector.kafka.MetricSender;
 import edu.marist.mscs710.metricscollector.system.*;
-import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,7 +148,7 @@ public class OSMetricsProducer implements MetricsProducer {
       try {
         collectorThread.join();
       } catch (InterruptedException e) {
-        LOGGER.error(LoggerUtils.getExceptionMessage(e));
+        LOGGER.error(e.getMessage(), e);
       }
       metricSender.close();
       return true;
@@ -187,7 +186,7 @@ public class OSMetricsProducer implements MetricsProducer {
         try {
           Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
-          LOGGER.error(LoggerUtils.getExceptionMessage(e));
+          LOGGER.error(e.getMessage(), e);
           return;
         }
       }

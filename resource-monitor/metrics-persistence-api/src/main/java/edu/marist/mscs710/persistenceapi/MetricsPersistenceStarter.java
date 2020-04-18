@@ -3,7 +3,6 @@ package edu.marist.mscs710.persistenceapi;
 import edu.marist.mscs710.metricscollector.kafka.KafkaConfig;
 import edu.marist.mscs710.metricscollector.Metric;
 import edu.marist.mscs710.metricscollector.metric.NullMetric;
-import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
 import edu.marist.mscs710.persistenceapi.db.SQLiteMetricsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ public class MetricsPersistenceStarter {
     try {
       appProps.load(new FileInputStream(getFileFromClasspath(PROPERTIES_FILE)));
     } catch (IOException | URISyntaxException ex) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(ex));
+      LOGGER.error(ex.getMessage(), ex);
     }
 
     // Command-line properties should take precedence over properties file.
@@ -53,7 +52,7 @@ public class MetricsPersistenceStarter {
     try {
       runFile.createNewFile();
     } catch (IOException ex) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(ex));
+      LOGGER.error(ex.getMessage(), ex);
       return;
     }
 
@@ -68,7 +67,7 @@ public class MetricsPersistenceStarter {
         dbDirectory + "/metrics.db",
         dbDirectory + "/db_schema.sql");
     } catch (SQLException | IOException e) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(e));
+      LOGGER.error(e.getMessage(), e);
       return;
     }
 
@@ -93,7 +92,7 @@ public class MetricsPersistenceStarter {
       try {
         Thread.sleep(RUNFILE_CHECK_INTERVAL_MS);
       } catch (InterruptedException ex) {
-        LOGGER.error(LoggerUtils.getExceptionMessage(ex));
+        LOGGER.error(ex.getMessage(), ex);
         break;
       }
     }

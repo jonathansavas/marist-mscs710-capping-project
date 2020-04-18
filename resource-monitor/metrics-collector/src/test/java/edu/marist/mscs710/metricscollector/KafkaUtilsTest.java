@@ -14,19 +14,15 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
 
 public class KafkaUtilsTest {
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private static final MetricSerializer metricSerializer = new MetricSerializer();
   private static final MetricDeserializer metricDeserializer = new MetricDeserializer();
 
-  private static Random ran = new Random();
-
   @Test
   public void testCpuCoreDeserialization() throws IOException {
-    CpuCoreData metricData = new CpuCoreData(ran.nextInt(), ran.nextDouble(), ran.nextLong(), ran.nextLong());
+    CpuCoreData metricData = RandomMetric.getRandomCpuCoreData();
     byte[] ser = metricSerializer.serialize("", metricData);
 
     Map<String, Object> deser = deserializeToMap(ser);
@@ -39,15 +35,12 @@ public class KafkaUtilsTest {
 
     CpuCoreData deserMetric = (CpuCoreData) metricDeserializer.deserialize("", ser);
 
-    Assert.assertEquals(metricData.getEpochMillisTime(), deserMetric.getEpochMillisTime());
-    Assert.assertEquals(metricData.getDeltaMillis(), deserMetric.getDeltaMillis());
-    Assert.assertEquals(metricData.getCoreUtilization(), deserMetric.getCoreUtilization(), 0.0);
-    Assert.assertEquals(metricData.getCoreId(), deserMetric.getCoreId());
+    Assert.assertEquals(metricData, deserMetric);
   }
 
   @Test
   public void testCpuDeserialization() throws IOException {
-    CpuData metricData = new CpuData(ran.nextDouble(), ran.nextDouble(), ran.nextLong(), ran.nextLong());
+    CpuData metricData = RandomMetric.getRandomCpuData();
     byte[] ser = metricSerializer.serialize("", metricData);
 
     Map<String, Object> deser = deserializeToMap(ser);
@@ -60,15 +53,12 @@ public class KafkaUtilsTest {
 
     CpuData deserMetric = (CpuData) metricDeserializer.deserialize("", ser);
 
-    Assert.assertEquals(metricData.getEpochMillisTime(), deserMetric.getEpochMillisTime());
-    Assert.assertEquals(metricData.getDeltaMillis(), deserMetric.getDeltaMillis());
-    Assert.assertEquals(metricData.getUtilization(), deserMetric.getUtilization(), 0.0);
-    Assert.assertEquals(metricData.getTemperature(), deserMetric.getTemperature(), 0.0);
+    Assert.assertEquals(metricData, deserMetric);
   }
 
   @Test
   public void testMemoryDeserialization() throws IOException {
-    MemoryData metricData = new MemoryData(ran.nextDouble(), ran.nextDouble(), ran.nextLong(), ran.nextLong());
+    MemoryData metricData = RandomMetric.getRandomMemoryData();
 
     byte[] ser = metricSerializer.serialize("", metricData);
 
@@ -82,15 +72,12 @@ public class KafkaUtilsTest {
 
     MemoryData deserMetric = (MemoryData) metricDeserializer.deserialize("", ser);
 
-    Assert.assertEquals(metricData.getEpochMillisTime(), deserMetric.getEpochMillisTime());
-    Assert.assertEquals(metricData.getDeltaMillis(), deserMetric.getDeltaMillis());
-    Assert.assertEquals(metricData.getMemoryUtilization(), deserMetric.getMemoryUtilization(), 0.0);
-    Assert.assertEquals(metricData.getPageFaults(), deserMetric.getPageFaults(), 0.0);
+    Assert.assertEquals(metricData, deserMetric);
   }
 
   @Test
   public void testNetworkDeserialization() throws IOException {
-    NetworkData metricData = new NetworkData(ran.nextDouble(), ran.nextDouble(), ran.nextLong(), ran.nextLong(), ran.nextLong());
+    NetworkData metricData = RandomMetric.getRandomNetworkData();
 
     byte[] ser = metricSerializer.serialize("", metricData);
 
@@ -105,17 +92,12 @@ public class KafkaUtilsTest {
 
     NetworkData deserMetric = (NetworkData) metricDeserializer.deserialize("", ser);
 
-    Assert.assertEquals(metricData.getEpochMillisTime(), deserMetric.getEpochMillisTime());
-    Assert.assertEquals(metricData.getDeltaMillis(), deserMetric.getDeltaMillis());
-    Assert.assertEquals(metricData.getReceive(), deserMetric.getReceive(), 0.0);
-    Assert.assertEquals(metricData.getSend(), deserMetric.getSend(), 0.0);
-    Assert.assertEquals(metricData.getThroughput(), deserMetric.getThroughput());
+    Assert.assertEquals(metricData, deserMetric);
   }
 
   @Test
   public void testProcessDeserialization() throws IOException {
-    ProcessData metricData = new ProcessData(ran.nextInt(), UUID.randomUUID().toString(), ran.nextLong(), ran.nextLong(), ran.nextDouble(),
-      ran.nextLong(), ran.nextDouble(), ran.nextDouble(), Processes.PidState.RUNNING, ran.nextLong(), ran.nextLong());
+    ProcessData metricData = RandomMetric.getRandomProcessData();
 
     byte[] ser = metricSerializer.serialize("", metricData);
 
@@ -136,22 +118,12 @@ public class KafkaUtilsTest {
 
     ProcessData deserMetric = (ProcessData) metricDeserializer.deserialize("", ser);
 
-    Assert.assertEquals(metricData.getEpochMillisTime(), deserMetric.getEpochMillisTime());
-    Assert.assertEquals(metricData.getDeltaMillis(), deserMetric.getDeltaMillis());
-    Assert.assertEquals(metricData.getCpuUsage(), deserMetric.getCpuUsage(), 0.0);
-    Assert.assertEquals(metricData.getKbRead(), deserMetric.getKbRead(), 0.0);
-    Assert.assertEquals(metricData.getKbWritten(), deserMetric.getKbWritten(), 0.0);
-    Assert.assertEquals(metricData.getName(), deserMetric.getName());
-    Assert.assertEquals(metricData.getStartTime(), deserMetric.getStartTime());
-    Assert.assertEquals(metricData.getUpTime(), deserMetric.getUpTime());
-    Assert.assertEquals(metricData.getMemory(), deserMetric.getMemory());
-    Assert.assertEquals(metricData.getPidState(), deserMetric.getPidState());
-    Assert.assertEquals(metricData.getPid(), deserMetric.getPid());
+    Assert.assertEquals(metricData, deserMetric);
   }
 
   @Test
   public void testSystemMetricsDeserialization() throws IOException {
-    SystemData metricData = new SystemData(ran.nextLong(), ran.nextLong(), ran.nextLong());
+    SystemData metricData = RandomMetric.getRandomSystemData();
 
     byte[] ser = metricSerializer.serialize("", metricData);
 
@@ -164,14 +136,12 @@ public class KafkaUtilsTest {
 
     SystemData deserMetric = (SystemData) metricDeserializer.deserialize("", ser);
 
-    Assert.assertEquals(metricData.getEpochMillisTime(), deserMetric.getEpochMillisTime());
-    Assert.assertEquals(metricData.getDeltaMillis(), deserMetric.getDeltaMillis());
-    Assert.assertEquals(metricData.getUpTime(), deserMetric.getUpTime());
+    Assert.assertEquals(metricData, deserMetric);
   }
 
   @Test
   public void testSystemConstantsDeserialization() throws IOException {
-    SystemConstants metricData = new SystemConstants(ran.nextDouble(), ran.nextInt(), ran.nextInt(), ran.nextDouble());
+    SystemConstants metricData = RandomMetric.getRandomSystemConstants();
 
     byte[] ser = metricSerializer.serialize("", metricData);
 
@@ -185,10 +155,7 @@ public class KafkaUtilsTest {
 
     SystemConstants deserMetric = (SystemConstants) metricDeserializer.deserialize("", ser);
 
-    Assert.assertEquals(metricData.getPhysicalCores(), deserMetric.getPhysicalCores());
-    Assert.assertEquals(metricData.getLogicalCores(), deserMetric.getLogicalCores());
-    Assert.assertEquals(metricData.getTotalMemGb(), deserMetric.getTotalMemGb(), 0.0);
-    Assert.assertEquals(metricData.getCpuSpeed(), deserMetric.getCpuSpeed(), 0.0);
+    Assert.assertEquals(metricData, deserMetric);
   }
 
   private Map<String, Object> deserializeToMap(byte[] serializedJson) throws IOException {

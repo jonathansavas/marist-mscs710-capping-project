@@ -1,7 +1,12 @@
 package edu.marist.mscs710.persistenceapi.db;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.marist.mscs710.metricscollector.Metric;
-import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
+import edu.marist.mscs710.metricscollector.data.MetricData;
+import edu.marist.mscs710.metricscollector.kafka.MetricDeserializer;
+import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.persistenceapi.MetricsPersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +32,9 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
   private static final long ONE_MIN_MS = 1000 * 60;
   private static final long ONE_HOUR_MS = ONE_MIN_MS * 60;
   private static final long PRUNE_ELIGIBILITY_MS = ONE_HOUR_MS * 12;
+
+  private MetricDeserializer metricDeser = new MetricDeserializer();
+  private ObjectMapper objectMapper = new ObjectMapper();
 
   private String dbUrl;
   private List<String> metricTypes;
@@ -54,7 +62,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     try (Connection conn = getSqliteConnection()) {
       conn.createStatement().execute(metric.toSqlInsertString());
     } catch (SQLException e) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(e));
+      LOGGER.error(e.getMessage(), e);
       return false;
     }
 
@@ -73,7 +81,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       }
 
     } catch (SQLException e) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(e));
+      LOGGER.error(e.getMessage(), e);
     }
 
     this.metricTypes = metricTypes.stream()
@@ -137,14 +145,27 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
         bound =
       }
     }
-  }
+  }*/
 
-  private Map<String, List<Metric>> getRecordsBySnapshotInterval(long earliest, long latest, MetricType type) {
+  public <T extends MetricData> List<T> getMetricsInRange(long earliest, long latest, String metricType, Class<T> clazz) {
     try (Connection conn = getSqliteConnection()) {
-      ResultSet rs = getRecordsToPrune(earliest, latest, type.toString().toLowerCase(), conn);
+      ResultSet rs = getRecordsInRange(earliest, latest, metricType, conn);
 
-      List<String> fields = metricFields.get(type);
-      long bound = latest - PRUNE_ELIGIBILITY_MS;
+      List<T> metrics = new ArrayList<>();
+
+      while (rs.next()) {
+
+        try {
+          metrics.add(createMetric(rs, metricType, clazz));
+        } catch (JsonProcessingException e) {
+          LOGGER.error(e.getMessage(), e);
+        }
+
+      }
+
+      return metrics;
+
+      /*long bound = latest - PRUNE_ELIGIBILITY_MS;
       List<Metric> minuteRecords = new ArrayList<>();
       List<Metric> hourRecords = new ArrayList<>();
 
@@ -163,21 +184,64 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       return new HashMap<String, List<Metric>>() {{
         put(HOUR, hourRecords);
         put(MINUTE, minuteRecords);
-      }};
+      }};*/
 
     } catch (SQLException e) {
-      LoggerUtils.getExceptionMessage(e);
-      return new HashMap<>();
+      LOGGER.error(e.getMessage(), e);
+      return new ArrayList<>();
     }
-  }*/
+  }
 
-  private static ResultSet getRecordsToPrune(long earliest, long latest, String table, Connection conn) throws SQLException {
+  public <T extends Metric> T createMetric(ResultSet rs, String metricType, Class<T> clazz) throws SQLException, JsonProcessingException {
+    ObjectNode node = objectMapper.createObjectNode();
+    node.put(Fields.METRIC_TYPE, metricType);
+
+    ResultSetMetaData rsmd = rs.getMetaData();
+    int numColumns = rsmd.getColumnCount();
+
+    for (int i = 1; i <= numColumns; i++) {
+      switch (rsmd.getColumnType(i)) {
+        case (java.sql.Types.BIGINT):
+          node.put(rsmd.getColumnName(i), rs.getLong(i));
+          break;
+
+        case (java.sql.Types.INTEGER):
+        case (java.sql.Types.SMALLINT):
+        case (java.sql.Types.TINYINT):
+          node.put(rsmd.getColumnName(i), rs.getInt(i));
+          break;
+
+        case (java.sql.Types.REAL):
+        case (java.sql.Types.DOUBLE):
+        case (java.sql.Types.FLOAT):
+          node.put(rsmd.getColumnName(i), rs.getDouble(i));
+          break;
+
+        case (java.sql.Types.VARCHAR):
+        case (java.sql.Types.NVARCHAR):
+        case (java.sql.Types.LONGVARCHAR):
+        case (java.sql.Types.LONGNVARCHAR):
+        case (java.sql.Types.CHAR):
+        case (java.sql.Types.NCHAR):
+          node.put(rsmd.getColumnName(i), rs.getString(i));
+          break;
+
+        default:
+          node.putPOJO(rsmd.getColumnName(i), rs.getObject(i));
+          break;
+      }
+    }
+
+    return metricDeser.deserialize(node, clazz);
+  }
+
+  private static ResultSet getRecordsInRange(long earliest, long latest, String table, Connection conn) throws SQLException {
     // Earliest is inclusive and latest is exclusive
     return conn.createStatement()
       .executeQuery(
         "SELECT * FROM " + table +
-        " WHERE datetime BETWEEN " + earliest + " AND " + (latest - 1) /*+
-          " ORDER BY datetime ASC;"*/);
+        " WHERE datetime BETWEEN " + earliest + " AND " + (latest - 1) +
+          " ORDER BY datetime ASC;");
   }
 
   private static long getPruneUpperBound() {

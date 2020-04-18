@@ -1,5 +1,6 @@
 package edu.marist.mscs710.persistenceapi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import edu.marist.mscs710.metricscollector.data.*;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.system.Processes;
@@ -13,16 +14,12 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Random;
-import java.util.UUID;
 
 public class SQLiteMetricsTest {
   private static String dbSchemaPath = "./src/test/resources/db_schema.sql";
   private static String dbFilePath = "./src/test/resources/metrics.db";
 
-  private static Random ran = new Random();
-
-  private static MetricsPersistenceService sqlIte;
+  private static SQLiteMetricsImpl sqlIte;
 
   @BeforeClass
   public static void prepare() throws IOException, SQLException {
@@ -42,8 +39,8 @@ public class SQLiteMetricsTest {
   }
 
   @Test
-  public void testPersistSystemMetrics() throws SQLException {
-    SystemData metric = new SystemData(ran.nextLong(), ran.nextLong(), ran.nextLong());
+  public void testPersistSystemMetrics() throws SQLException, JsonProcessingException {
+    SystemData metric = RandomMetric.getRandomSystemData();
 
     sqlIte.persistMetric(metric);
 
@@ -53,6 +50,9 @@ public class SQLiteMetricsTest {
 
       Assert.assertEquals(metric.getUpTime(), rs.getLong(Fields.SYSTEM_METRICS_UPTIME));
       Assert.assertEquals(metric.getEpochMillisTime(), rs.getLong(Fields.SYSTEM_METRICS_DATETIME));
+      Assert.assertEquals(metric.getDeltaMillis(), rs.getLong(Fields.SYSTEM_METRICS_DELTA_MILLIS));
+
+      Assert.assertEquals(metric, sqlIte.createMetric(rs, Fields.METRIC_TYPE_SYSTEM_METRICS, SystemData.class));
     }
   }
 
@@ -62,9 +62,8 @@ public class SQLiteMetricsTest {
   }
 
   @Test
-  public void testPersistProcess() throws SQLException {
-    ProcessData process = new ProcessData(ran.nextInt(), UUID.randomUUID().toString(), ran.nextLong(), ran.nextLong(), ran.nextDouble(),
-      ran.nextLong(), ran.nextDouble(), ran.nextDouble(), Processes.PidState.RUNNING, ran.nextLong(), ran.nextLong());
+  public void testPersistProcess() throws SQLException, JsonProcessingException {
+    ProcessData process = RandomMetric.getRandomProcessData();
 
     sqlIte.persistMetric(process);
 
@@ -83,12 +82,14 @@ public class SQLiteMetricsTest {
       Assert.assertEquals(process.getKbRead(), rs.getDouble("kb_read"), 0.0);
       Assert.assertEquals(process.getKbWritten(), rs.getDouble("kb_written"), 0.0);
       Assert.assertEquals(process.getPidState(), Processes.PidState.valueOf(rs.getString("state")));
+
+      Assert.assertEquals(process, sqlIte.createMetric(rs, Fields.METRIC_TYPE_PROCESSES, ProcessData.class));
     }
   }
 
   @Test
-  public void testPersistCpu() throws SQLException {
-    CpuData cpu = new CpuData(ran.nextDouble(), ran.nextDouble(), ran.nextLong(), ran.nextLong());
+  public void testPersistCpu() throws SQLException, JsonProcessingException {
+    CpuData cpu = RandomMetric.getRandomCpuData();
 
     sqlIte.persistMetric(cpu);
 
@@ -100,12 +101,14 @@ public class SQLiteMetricsTest {
       Assert.assertEquals(cpu.getDeltaMillis(), rs.getLong("delta_millis"));
       Assert.assertEquals(cpu.getUtilization(), rs.getDouble("utilization"), 0.0);
       Assert.assertEquals(cpu.getTemperature(), rs.getDouble("temperature"), 0.0);
+
+      Assert.assertEquals(cpu, sqlIte.createMetric(rs, Fields.METRIC_TYPE_CPU, CpuData.class));
     }
   }
 
   @Test
-  public void testPersistCpuCore() throws SQLException {
-    CpuCoreData cpuCore = new CpuCoreData(ran.nextInt(), ran.nextDouble(), ran.nextLong(), ran.nextLong());
+  public void testPersistCpuCore() throws SQLException, JsonProcessingException {
+    CpuCoreData cpuCore = RandomMetric.getRandomCpuCoreData();
 
     sqlIte.persistMetric(cpuCore);
 
@@ -117,12 +120,14 @@ public class SQLiteMetricsTest {
       Assert.assertEquals(cpuCore.getDeltaMillis(), rs.getLong("delta_millis"));
       Assert.assertEquals(cpuCore.getCoreUtilization(), rs.getDouble("core_utilization"), 0.0);
       Assert.assertEquals(cpuCore.getCoreId(), rs.getInt("core_id"));
+
+      Assert.assertEquals(cpuCore, sqlIte.createMetric(rs, Fields.METRIC_TYPE_CPU_CORE, CpuCoreData.class));
     }
   }
 
   @Test
-  public void testPersistMemory() throws SQLException {
-    MemoryData memory = new MemoryData(ran.nextDouble(), ran.nextDouble(), ran.nextLong(), ran.nextLong());
+  public void testPersistMemory() throws SQLException, JsonProcessingException {
+    MemoryData memory = RandomMetric.getRandomMemoryData();
 
     sqlIte.persistMetric(memory);
 
@@ -134,12 +139,14 @@ public class SQLiteMetricsTest {
       Assert.assertEquals(memory.getDeltaMillis(), rs.getLong("delta_millis"));
       Assert.assertEquals(memory.getMemoryUtilization(), rs.getDouble("utilization"), 0.0);
       Assert.assertEquals(memory.getPageFaults(), rs.getDouble("page_faults"), 0.0);
+
+      Assert.assertEquals(memory, sqlIte.createMetric(rs, Fields.METRIC_TYPE_MEMORY, MemoryData.class));
     }
   }
 
   @Test
-  public void testPersistNetwork() throws SQLException {
-    NetworkData network = new NetworkData(ran.nextDouble(), ran.nextDouble(), ran.nextLong(), ran.nextLong(), ran.nextLong());
+  public void testPersistNetwork() throws SQLException, JsonProcessingException {
+    NetworkData network = RandomMetric.getRandomNetworkData();
 
     sqlIte.persistMetric(network);
 
@@ -152,12 +159,14 @@ public class SQLiteMetricsTest {
       Assert.assertEquals(network.getThroughput(), rs.getLong("throughput"), 0.0);
       Assert.assertEquals(network.getSend(), rs.getDouble("send"), 0.0);
       Assert.assertEquals(network.getReceive(), rs.getDouble("receive"), 0);
+
+      Assert.assertEquals(network, sqlIte.createMetric(rs, Fields.METRIC_TYPE_NETWORK, NetworkData.class));
     }
   }
 
   @Test
-  public void testPersistSystemConstants() throws SQLException {
-    SystemConstants systemConstants = new SystemConstants(ran.nextDouble(), ran.nextInt(), ran.nextInt(), ran.nextDouble());
+  public void testPersistSystemConstants() throws SQLException, JsonProcessingException {
+    SystemConstants systemConstants = RandomMetric.getRandomSystemConstants();
 
     sqlIte.persistMetric(systemConstants);
 
@@ -169,6 +178,30 @@ public class SQLiteMetricsTest {
       Assert.assertEquals(systemConstants.getPhysicalCores(), rs.getInt("physical_cores"));
       Assert.assertEquals(systemConstants.getLogicalCores(), rs.getInt("logical_cores"));
       Assert.assertEquals(systemConstants.getCpuSpeed(), rs.getDouble("cpu_speed"), 0.0);
+
+      Assert.assertEquals(systemConstants, sqlIte.createMetric(rs, Fields.METRIC_TYPE_SYSTEM_CONSTANTS, SystemConstants.class));
+    }
+  }
+
+  @Test
+  public void testGetMetricsInRange() throws SQLException {
+    deleteAllRows(Fields.METRIC_TYPE_PROCESSES);
+
+    ProcessData process = RandomMetric.getRandomProcessData();
+
+    sqlIte.persistMetric(process);
+    SQLiteMetricsImpl sqLiteMetrics = sqlIte;
+
+    List<ProcessData> data = sqLiteMetrics.getMetricsInRange(0, process.getEpochMillisTime() + 1, Fields.METRIC_TYPE_PROCESSES, ProcessData.class);
+
+    Assert.assertTrue(sqLiteMetrics.getMetricsInRange(0, process.getEpochMillisTime(), Fields.METRIC_TYPE_PROCESSES, ProcessData.class).isEmpty());
+
+    Assert.assertEquals(process, data.get(0));
+  }
+
+  private void deleteAllRows(String table) throws SQLException {
+    try (Connection conn = DriverManager.getConnection(SQLiteMetricsImpl.createSqliteDbUrl(dbFilePath))) {
+      conn.createStatement().executeUpdate("DELETE FROM " + table);
     }
   }
 }

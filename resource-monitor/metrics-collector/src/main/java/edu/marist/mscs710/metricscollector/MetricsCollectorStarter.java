@@ -1,7 +1,6 @@
 package edu.marist.mscs710.metricscollector;
 
-import edu.marist.mscs710.metricscollector.producer.OSMetricsProducer;
-import edu.marist.mscs710.metricscollector.utils.LoggerUtils;
+import edu.marist.mscs710.metricscollector.producer.OSMetricsProducer;;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.errors.TimeoutException;
@@ -31,7 +30,7 @@ public class MetricsCollectorStarter {
   private static final String DEFAULT_TOPIC = "resource-monitor-metrics";
   private static final String DEFAULT_BROKER = "localhost:9092";
   private static final String RUNFILE = "./runfile.tmp";
-  private static final int LOG_RETENTION_HOURS = 24;
+  private static final int LOG_RETENTION_HOURS = 2;
 
   public static void main(String[] args) {
     Properties appProps = new Properties();
@@ -39,7 +38,7 @@ public class MetricsCollectorStarter {
     try {
       appProps.load(new FileInputStream(getFileFromClasspath(PROPERTIES_FILE)));
     } catch (IOException | URISyntaxException ex) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(ex));
+      LOGGER.error(ex.getMessage(), ex);
     }
 
     // Command-line properties should take precedence over properties file.
@@ -54,7 +53,7 @@ public class MetricsCollectorStarter {
         createTopic(kafkaAdminClient, topic);
       }
     } catch (TimeoutException | InterruptedException | ExecutionException e) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(e));
+      LOGGER.error(e.getMessage(), e);
       return;
     }
 
@@ -63,7 +62,7 @@ public class MetricsCollectorStarter {
     try {
       runFile.createNewFile();
     } catch (IOException ex) {
-      LOGGER.error(LoggerUtils.getExceptionMessage(ex));
+      LOGGER.error(ex.getMessage(), ex);
       return;
     }
 
@@ -77,7 +76,7 @@ public class MetricsCollectorStarter {
       try {
         Thread.sleep(RUNFILE_CHECK_INTERVAL_MS);
       } catch (InterruptedException e) {
-        LOGGER.error(LoggerUtils.getExceptionMessage(e));
+        LOGGER.error(e.getMessage(), e);
         break;
       }
     }

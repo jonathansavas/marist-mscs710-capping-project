@@ -1,5 +1,6 @@
 package edu.marist.mscs710.metricscollector.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
   @JsonSubTypes.Type(value = ProcessData.class, name = Fields.METRIC_TYPE_PROCESSES),
   @JsonSubTypes.Type(value = SystemData.class, name = Fields.METRIC_TYPE_SYSTEM_METRICS),
 })
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class MetricData implements Metric {
 
   @JsonProperty(Fields.DELTA_MILLIS)

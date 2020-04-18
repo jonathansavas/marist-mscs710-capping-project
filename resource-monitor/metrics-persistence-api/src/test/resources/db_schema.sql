@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS memory (
 CREATE TABLE IF NOT EXISTS network (
     datetime     BIGINT NOT NULL PRIMARY KEY,
     delta_millis BIGINT NOT NULL,
-    throughput   REAL   NOT NULL,
+    throughput   BIGINT NOT NULL,
     send         REAL   NOT NULL,
     receive      REAL   NOT NULL
 );

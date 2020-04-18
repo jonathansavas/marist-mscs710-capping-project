@@ -35,7 +35,7 @@ public class KafkaTest {
 
   @Test
   public void testMetricSerializerDeserializerViaKafka() {
-    CpuCoreData before = new CpuCoreData(Integer.MAX_VALUE, Double.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE);
+    CpuCoreData before = RandomMetric.getRandomCpuCoreData();
 
     KafkaTestUtils k = kafka.getKafkaTestUtils();
 
@@ -53,10 +53,7 @@ public class KafkaTest {
 
     CpuCoreData after = (CpuCoreData) consumerRecords.get(0).value();
 
-    Assert.assertEquals(before.getEpochMillisTime(), after.getEpochMillisTime());
-    Assert.assertEquals(before.getDeltaMillis(), after.getDeltaMillis());
-    Assert.assertEquals(before.getCoreUtilization(), after.getCoreUtilization(), 0.0);
-    Assert.assertEquals(before.getCoreId(), after.getCoreId());
+    Assert.assertEquals(before, after);
   }
 
   @Test
