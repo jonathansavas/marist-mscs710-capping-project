@@ -15,6 +15,7 @@
         <oshi.version>4.5.0</oshi.version>
         <spring-kafka.version>2.4.4.RELEASE</spring-kafka.version>
         <jackson-core.version>2.10.3</jackson-core.version>
+        <mainClass>edu.marist.mscs710.metricscollector.MetricsCollectorStarter</mainClass>
     </properties>
 
     <dependencies>
@@ -56,18 +57,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven-jar-plugin.version}</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>edu.marist.mscs710.metricscollector.MetricsCollectorStarter</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>

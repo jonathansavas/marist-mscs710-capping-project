@@ -136,7 +136,10 @@ public class Processes implements MetricSource {
     return prior != null
       && p != null
       && prior.getProcessID() == p.getProcessID()
-      && p.getStartTime() > prior.getStartTime() + 5;
+      // Start times returned by OSHI sometimes vary + ~11ms.
+      // OSHI considers anything within 200ms to be the same
+      // process, we will do the same
+      && p.getStartTime() > prior.getStartTime() + 200;
   }
 
   private static double getProcessCpuLoadBetweenChecks(OSProcess prior, OSProcess p) {

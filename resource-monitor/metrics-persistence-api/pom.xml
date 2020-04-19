@@ -14,6 +14,7 @@
     <properties>
         <sqlite-jdbc.version>3.30.1</sqlite-jdbc.version>
         <junit.version>4.13</junit.version>
+        <mainClass>edu.marist.mscs710.persistenceapi.MetricsPersistenceStarter</mainClass>
     </properties>
 
     <dependencies>
@@ -49,18 +50,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven-jar-plugin.version}</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>edu.marist.mscs710.persistenceapi.MetricsPersistenceStarter</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>

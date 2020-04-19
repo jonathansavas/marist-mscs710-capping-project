@@ -1,5 +1,6 @@
 package edu.marist.mscs710.persistenceapi;
 
+import edu.marist.mscs710.metricscollector.MetricsCollectorStarter;
 import edu.marist.mscs710.metricscollector.kafka.KafkaConfig;
 import edu.marist.mscs710.metricscollector.Metric;
 import edu.marist.mscs710.metricscollector.metric.NullMetric;
@@ -9,9 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Properties;
@@ -38,9 +38,12 @@ public class MetricsPersistenceStarter {
   public static void main(String[] args) {
     Properties appProps = new Properties();
 
-    try {
-      appProps.load(new FileInputStream(getFileFromClasspath(PROPERTIES_FILE)));
-    } catch (IOException | URISyntaxException ex) {
+    try (InputStream propsStream = MetricsCollectorStarter.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+      if (propsStream == null)
+        LOGGER.error("Could not locate \"{}\" on the classpath", PROPERTIES_FILE);
+      else
+        appProps.load(propsStream);
+    } catch (IOException ex) {
       LOGGER.error(ex.getMessage(), ex);
     }
 
@@ -100,9 +103,5 @@ public class MetricsPersistenceStarter {
     listener.stop();
 
     LOGGER.info("Metrics Persistence process shutdown successfully");
-  }
-
-  private static File getFileFromClasspath(String name) throws URISyntaxException {
-    return new File(ClassLoader.getSystemClassLoader().getResource(name).toURI());
   }
 }

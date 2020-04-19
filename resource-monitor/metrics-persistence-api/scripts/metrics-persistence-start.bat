@@ -8,4 +8,4 @@ cd ..
 
 set "APP_HOME=%CD%"
 
-java -cp "%APP_HOME%\config\*;%APP_HOME%\libs\*" -jar "%APP_HOME%\libs\${build.finalName}.jar"
+java -cp "%APP_HOME%;%APP_HOME%/config;%APP_HOME%/libs/*" ${mainClass}
