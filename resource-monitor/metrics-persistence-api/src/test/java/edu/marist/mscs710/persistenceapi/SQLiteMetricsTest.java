@@ -1,6 +1,7 @@
 package edu.marist.mscs710.persistenceapi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import edu.marist.mscs710.metricscollector.Metric;
 import edu.marist.mscs710.metricscollector.data.*;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.metricscollector.system.Processes;
@@ -13,11 +14,17 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
 public class SQLiteMetricsTest {
   private static String dbSchemaPath = "./src/test/resources/db_schema.sql";
   private static String dbFilePath = "./src/test/resources/metrics.db";
+
+  private static final long ONE_MIN_MS = 1000 * 60;
+  private static final long ONE_HOUR_MS = ONE_MIN_MS * 60;
+  private static final long SQLITE_PRUNE_ELIGIBILITY_MS = ONE_HOUR_MS * 12;
 
   private static SQLiteMetricsImpl sqlIte;
 
@@ -29,6 +36,7 @@ public class SQLiteMetricsTest {
   @AfterClass
   public static void cleanup() throws SQLException {
     List<String> tableNames = sqlIte.getMetricTypes();
+    tableNames.add("prune_bounds");
 
     for (String table : tableNames) {
       try (Connection conn = DriverManager.getConnection(SQLiteMetricsImpl.createSqliteDbUrl(dbFilePath))) {
@@ -197,6 +205,41 @@ public class SQLiteMetricsTest {
     Assert.assertTrue(sqLiteMetrics.getMetricsInRange(0, process.getEpochMillisTime(), Fields.METRIC_TYPE_PROCESSES, ProcessData.class).isEmpty());
 
     Assert.assertEquals(process, data.get(0));
+  }
+
+  @Test
+  public void testPrune() throws SQLException {
+    deleteAllRows(Fields.METRIC_TYPE_SYSTEM_METRICS);
+
+    long minuteBound = Instant.now().toEpochMilli() - SQLITE_PRUNE_ELIGIBILITY_MS;
+    long hourBound = minuteBound - SQLITE_PRUNE_ELIGIBILITY_MS + 100;
+
+    List<SystemData> metrics = Arrays.asList(
+      new SystemData(4,4, hourBound - ONE_HOUR_MS * 3 / 2 ),
+      new SystemData(4,4, hourBound - ONE_HOUR_MS * 3 / 2 + ONE_HOUR_MS - 1),
+      new SystemData(1,1, hourBound - ONE_HOUR_MS * 3 / 2 + ONE_HOUR_MS),
+      new SystemData(2,2, hourBound),
+      new SystemData(2,2, hourBound + ONE_MIN_MS - 1),
+      new SystemData(3,3, hourBound + ONE_MIN_MS),
+      new SystemData(3,3, hourBound + 2 * ONE_MIN_MS - 1)
+    );
+
+    for (Metric metric : metrics) {
+      sqlIte.persistMetric(metric);
+    }
+
+    sqlIte.prune();
+
+    List<SystemData> hourlyPrune = sqlIte.getMetricsInRange(0, hourBound, Fields.METRIC_TYPE_SYSTEM_METRICS, SystemData.class);
+    List<SystemData> minutelyPrune = sqlIte.getMetricsInRange(hourBound, minuteBound, Fields.METRIC_TYPE_SYSTEM_METRICS, SystemData.class);
+
+    Assert.assertEquals(2, hourlyPrune.size());
+    Assert.assertEquals(2, minutelyPrune.size());
+
+    Assert.assertEquals(SystemData.combine(metrics.subList(0,2)), hourlyPrune.get(0));
+    Assert.assertEquals(SystemData.combine(metrics.subList(2,3)), hourlyPrune.get(1));
+    Assert.assertEquals(SystemData.combine(metrics.subList(3,5)), minutelyPrune.get(0));
+    Assert.assertEquals(SystemData.combine(metrics.subList(5,7)), minutelyPrune.get(1));
   }
 
   private void deleteAllRows(String table) throws SQLException {

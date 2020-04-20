@@ -19,16 +19,6 @@ CREATE TABLE IF NOT EXISTS cpu_core (
     PRIMARY KEY (datetime, core_id)
 );
 
--- Table: GPU
---CREATE TABLE IF NOT EXISTS gpu (
---    datetime        BIGINT NOT NULL
---                           PRIMARY KEY,
---    utilization     REAL   NOT NULL,
---    mem_util        REAL   NOT NULL,
---    shared_mem_util REAL   NOT NULL,
---    temperature     REAL   NOT NULL
---);
-
 CREATE TABLE IF NOT EXISTS memory (
     datetime     BIGINT NOT NULL PRIMARY KEY,
     delta_millis BIGINT NOT NULL,

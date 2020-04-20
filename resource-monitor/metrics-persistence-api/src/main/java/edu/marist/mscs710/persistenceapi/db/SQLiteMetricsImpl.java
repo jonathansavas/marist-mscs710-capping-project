@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.marist.mscs710.metricscollector.Metric;
-import edu.marist.mscs710.metricscollector.data.MetricData;
+import edu.marist.mscs710.metricscollector.data.*;
 import edu.marist.mscs710.metricscollector.kafka.MetricDeserializer;
 import edu.marist.mscs710.metricscollector.metric.Fields;
 import edu.marist.mscs710.persistenceapi.MetricsPersistenceService;
@@ -17,6 +17,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static edu.marist.mscs710.persistenceapi.utils.DateUtils.convertEpochMillisDateFormat;
+
 /**
  * SQLite implementation of <tt>MetricsPersistenceService</tt>. This class is
  * responsible for instantiating a SQLite database instance and persisting
@@ -25,19 +27,20 @@ import java.util.stream.Collectors;
 public class SQLiteMetricsImpl implements MetricsPersistenceService {
   private static final Logger LOGGER = LoggerFactory.getLogger(SQLiteMetricsImpl.class);
 
-  private static final String DATETIME = "datetime";
-  private static final String HOUR = "hour";
-  private static final String MINUTE = "minute";
-
   private static final long ONE_MIN_MS = 1000 * 60;
   private static final long ONE_HOUR_MS = ONE_MIN_MS * 60;
   private static final long PRUNE_ELIGIBILITY_MS = ONE_HOUR_MS * 12;
+  private static final String PRUNE_BOUND_TABLE = "prune_bounds";
+  private static final String BOUND = "bound";
 
   private MetricDeserializer metricDeser = new MetricDeserializer();
   private ObjectMapper objectMapper = new ObjectMapper();
 
+  private long nextPruneTime;
+
   private String dbUrl;
   private List<String> metricTypes;
+  private List<String> prunables;
 
   /**
    * Constructs a new <tt>SQLiteMetricsImpl</tt>, which will use an existing
@@ -53,8 +56,16 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
   public SQLiteMetricsImpl(String dbFilePath, String dbSchemaPath) throws SQLException, IOException {
     this.dbUrl = createSqliteDbUrl(dbFilePath);
     executeSqlScript(dbSchemaPath);
+    createPruneBoundTable();
     setMetricTypes();
+
+    prunables = metricTypes.stream()
+      .filter(t -> ! t.equals(Fields.METRIC_TYPE_SYSTEM_CONSTANTS))
+      .collect(Collectors.toList());
+
     LOGGER.info("SQLiteMetricsImpl created for db file path '{}'", dbFilePath);
+
+    prune();
   }
 
   @Override
@@ -66,7 +77,14 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       return false;
     }
 
+    if (Instant.now().toEpochMilli() > nextPruneTime)
+      prune();
+
     return true;
+  }
+
+  private void persistMetric(Metric metric, Connection conn) throws SQLException {
+    conn.createStatement().execute(metric.toSqlInsertString());
   }
 
   private void setMetricTypes() {
@@ -86,6 +104,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
 
     this.metricTypes = metricTypes.stream()
       .filter(s -> ! s.contains("sqlite"))
+      .filter(s -> ! s.equals(PRUNE_BOUND_TABLE))
       .collect(Collectors.toList());
   }
 
@@ -132,20 +151,127 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     }
   }
 
-  /*private List<Metric> basicPrune(Map<String, List<Metric>> batchedRecords) {
-    List<Metric> prunedMetrics = new ArrayList<>();
-    List<Metric> snapshotBucket = new ArrayList<>();
+  public void prune() {
+    LOGGER.info("Begin database pruning operation");
 
-    long bound = (long) batchedRecords.get(HOUR).get(0).getMetricData().get(DATETIME) + ONE_HOUR_MS;
-    for (Metric metric : batchedRecords.get(HOUR)) {
-      long datetime = (long) metric.getMetricData().get(DATETIME);
-      if (datetime < bound) {
-        snapshotBucket.add(metric);
-      } else {
-        bound =
+    long minuteBound = getPruneUpperBound();
+    long hourBound = minuteBound - PRUNE_ELIGIBILITY_MS;
+
+    for (String metricType : prunables) {
+      long lowerBound = getLastPruneBound(metricType);
+
+      if (prune(lowerBound, hourBound, metricType, ONE_HOUR_MS)) {
+        LOGGER.info("Successfully pruned \"{}\" metrics from {} to {} in 1 hour windows",
+          metricType, convertEpochMillisDateFormat(lowerBound), convertEpochMillisDateFormat(hourBound));
+
+        try {
+          storeLastPruneBound(metricType, hourBound);
+        } catch (SQLException e) {
+          LOGGER.error("Failed to store prune boundary", e);
+        }
+      }
+
+      if (prune(hourBound, minuteBound, metricType, ONE_MIN_MS)) {
+        LOGGER.info("Successfully pruned \"{}\" metrics from {} to {} in 1 minute windows",
+          metricType, convertEpochMillisDateFormat(hourBound), convertEpochMillisDateFormat(minuteBound));
       }
     }
-  }*/
+
+    LOGGER.info("End database pruning operation");
+
+    setNextPruneTime();
+  }
+
+  private boolean prune(long earliest, long latest, String metricType, long windowSize) {
+    List<? extends MetricData> combinedMetrics = combineMetrics(earliest, latest, metricType, windowSize);
+
+    if (combinedMetrics == null)
+      return false;
+
+    if (combinedMetrics.isEmpty())
+      return true;
+
+    Connection conn = null;
+    try {
+      conn = getSqliteConnection();
+      conn.setAutoCommit(false);
+
+      deleteRecordsInRange(earliest, latest, metricType, conn);
+
+      for (MetricData metric : combinedMetrics) {
+        persistMetric(metric, conn);
+      }
+
+      conn.commit();
+    } catch (SQLException e1) {
+      LOGGER.error("Prune for metric type \"{}\" from {} to {} failed, rolling back changes",
+        metricType, convertEpochMillisDateFormat(earliest), convertEpochMillisDateFormat(latest), e1);
+
+      try {
+        if (conn != null)
+          conn.rollback();
+      } catch (SQLException e2) {
+        LOGGER.error("Rollback failed", e2);
+      }
+
+      return false;
+    } finally {
+      try {
+        if (conn != null)
+          conn.close();
+      } catch (SQLException e3) {
+        LOGGER.error("Failed to close SQLite connection", e3);
+      }
+    }
+
+    return true;
+  }
+
+  private List<? extends MetricData> combineMetrics(long earliest, long latest, String metricType, long windowSize) {
+    switch (metricType) {
+      case (Fields.METRIC_TYPE_CPU):
+        List<List<CpuData>> cpuMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, CpuData.class));
+        return cpuMetrics == null ? null : cpuMetrics.stream().map(CpuData::combine).collect(Collectors.toList());
+
+      case (Fields.METRIC_TYPE_CPU_CORE):
+        List<List<CpuCoreData>> cpuCoreMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, CpuCoreData.class));
+        return cpuCoreMetrics == null ? null : cpuCoreMetrics.stream().map(CpuCoreData::combine).flatMap(Collection::stream).collect(Collectors.toList());
+
+      case (Fields.METRIC_TYPE_MEMORY):
+        List<List<MemoryData>> memoryMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, MemoryData.class));
+        return memoryMetrics == null ? null : memoryMetrics.stream().map(MemoryData::combine).collect(Collectors.toList());
+
+      case (Fields.METRIC_TYPE_NETWORK):
+        List<List<NetworkData>> networkMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, NetworkData.class));
+        return networkMetrics == null ? null : networkMetrics.stream().map(NetworkData::combine).collect(Collectors.toList());
+
+      case (Fields.METRIC_TYPE_PROCESSES):
+        List<List<ProcessData>> processMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, ProcessData.class));
+        return processMetrics == null ? null : processMetrics.stream().map(ProcessData::combine).flatMap(Collection::stream).collect(Collectors.toList());
+
+      case (Fields.METRIC_TYPE_SYSTEM_METRICS):
+        List<List<SystemData>> systemMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, SystemData.class));
+        return systemMetrics == null ? null : systemMetrics.stream().map(SystemData::combine).collect(Collectors.toList());
+
+      default:
+        return null;
+    }
+  }
+
+  public static <T extends MetricData> List<List<T>> bucketMetrics(long bucketSize, List<T> metrics) {
+    if (metrics == null)
+      return null;
+
+    if (metrics.isEmpty())
+      return new ArrayList<>();
+
+    long min = metrics.stream().min(Comparator.comparing(MetricData::getEpochMillisTime)).get().getEpochMillisTime();
+
+    // Group in buckets of [min,min+bucketSize), [min+bucketSize,min+2*bucketSize) ...
+    return new ArrayList<>(metrics.stream()
+      .collect(Collectors.groupingBy(m -> (m.getEpochMillisTime() - min) / bucketSize, Collectors.toList()))
+      .values());
+  }
 
   public <T extends MetricData> List<T> getMetricsInRange(long earliest, long latest, String metricType, Class<T> clazz) {
     try (Connection conn = getSqliteConnection()) {
@@ -159,36 +285,15 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
           metrics.add(createMetric(rs, metricType, clazz));
         } catch (JsonProcessingException e) {
           LOGGER.error(e.getMessage(), e);
+          return null;
         }
 
       }
 
       return metrics;
-
-      /*long bound = latest - PRUNE_ELIGIBILITY_MS;
-      List<Metric> minuteRecords = new ArrayList<>();
-      List<Metric> hourRecords = new ArrayList<>();
-
-      while (rs.next()) {
-        Map<String, Object> record = new HashMap<>();
-        for (String field : fields) {
-          record.put(field.toUpperCase(), rs.getObject(field));
-        }
-
-        if (rs.getLong(DATETIME) < bound)
-          hourRecords.add(new Metric(type, record));
-        else
-          minuteRecords.add(new Metric(type, record));
-      }
-
-      return new HashMap<String, List<Metric>>() {{
-        put(HOUR, hourRecords);
-        put(MINUTE, minuteRecords);
-      }};*/
-
     } catch (SQLException e) {
       LOGGER.error(e.getMessage(), e);
-      return new ArrayList<>();
+      return null;
     }
   }
 
@@ -240,13 +345,63 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     return conn.createStatement()
       .executeQuery(
         "SELECT * FROM " + table +
-        " WHERE datetime BETWEEN " + earliest + " AND " + (latest - 1) +
-          " ORDER BY datetime ASC;");
+        " WHERE datetime BETWEEN " + earliest + " AND " + (latest - 1)
+      );
+  }
+
+  private void deleteRecordsInRange(long earliest, long latest, String table, Connection conn) throws SQLException {
+    // Earliest is inclusive, latest is exclusive
+    conn.createStatement()
+      .executeUpdate(
+        "DELETE FROM " + table +
+          " WHERE datetime BETWEEN " + earliest + " AND " + (latest - 1)
+      );
+  }
+
+  private void storeLastPruneBound(String metricType, long exclusiveBound) throws SQLException {
+    try (Connection conn = getSqliteConnection()) {
+      conn.createStatement().execute(
+        "REPLACE INTO " + PRUNE_BOUND_TABLE +
+          " (" + Fields.METRIC_TYPE + ',' + BOUND + ") VALUES (" +
+          '\'' + metricType + '\'' + ',' + exclusiveBound + ')' + ';'
+      );
+    }
+  }
+
+  private long getLastPruneBound(String metricType) {
+    try (Connection conn = getSqliteConnection()) {
+      ResultSet rs = conn.createStatement().executeQuery(
+        "SELECT * FROM " + PRUNE_BOUND_TABLE +
+          " WHERE " + Fields.METRIC_TYPE + " = '" + metricType + '\''
+      );
+
+      if (rs.next())
+        return rs.getLong(BOUND);
+      else
+        return 0;
+    } catch (SQLException ex) {
+      LOGGER.error("Error retrieving boundary for pruning", ex);
+      return 0;
+    }
+  }
+
+  private void createPruneBoundTable() throws SQLException {
+    try (Connection conn = getSqliteConnection()) {
+      conn.createStatement().execute(
+        "CREATE TABLE IF NOT EXISTS " + PRUNE_BOUND_TABLE + " ( " +
+          Fields.METRIC_TYPE + " TEXT NOT NULL PRIMARY KEY, " +
+          BOUND + " BIGINT NOT NULL);"
+      );
+    }
   }
 
   private static long getPruneUpperBound() {
     // Exclusive upper bound
     return Instant.now().toEpochMilli() - PRUNE_ELIGIBILITY_MS;
+  }
+
+  private void setNextPruneTime() {
+    nextPruneTime = Instant.now().toEpochMilli() + ONE_HOUR_MS;
   }
 
 }
