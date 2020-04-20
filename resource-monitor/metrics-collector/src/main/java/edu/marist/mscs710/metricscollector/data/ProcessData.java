@@ -317,18 +317,19 @@ public class ProcessData extends MetricData {
     if (sameProcessMetrics == null || sameProcessMetrics.isEmpty())
       return null;
 
-    ProcessData first = sameProcessMetrics.get(0);
+    // Want to keep earliest pid state
+    ProcessData first = sortChronologically(sameProcessMetrics).get(0);
 
     int pid = first.getPid();
     String name = first.getName();
     long startTime = first.getStartTime();
     Processes.PidState pidState = first.getPidState();
 
-    long datetime = 0;
+    double datetime = 0;
     long totalMillis = 0;
-    long upTime = 0;
+    double upTime = 0;
     double cpuUsage = 0;
-    long memory = 0;
+    double memory = 0;
     double kbRead = 0;
     double kbWritten = 0;
 
@@ -343,6 +344,6 @@ public class ProcessData extends MetricData {
       totalMillis += deltaMillis;
     }
 
-    return new ProcessData(pid, name, startTime, upTime, cpuUsage, memory, kbRead, kbWritten, pidState, totalMillis, datetime);
+    return new ProcessData(pid, name, startTime, (long) upTime, cpuUsage, (long) memory, kbRead, kbWritten, pidState, totalMillis, (long) datetime);
   }
 }

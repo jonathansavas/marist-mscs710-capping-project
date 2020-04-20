@@ -127,11 +127,11 @@ public class NetworkData extends MetricData {
   }
 
   public static NetworkData combine(List<NetworkData> metrics) {
-    long datetime = 0;
+    double datetime = 0;
     long totalMillis = 0;
     double send = 0.0;
     double receive = 0.0;
-    long throughput = 0;
+    double throughput = 0;
 
     for (NetworkData data : metrics) {
       long deltaMillis = data.getDeltaMillis();
@@ -142,6 +142,6 @@ public class NetworkData extends MetricData {
       totalMillis += deltaMillis;
     }
 
-    return new NetworkData(send, receive, throughput, totalMillis, datetime);
+    return new NetworkData(send, receive, (long) throughput, totalMillis, (long) datetime);
   }
 }

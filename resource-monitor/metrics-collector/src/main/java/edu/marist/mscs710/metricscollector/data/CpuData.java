@@ -97,7 +97,7 @@ public class CpuData extends MetricData {
   }
 
   public static CpuData combine(List<CpuData> metrics) {
-    long datetime = 0;
+    double datetime = 0;
     long totalMillis = 0;
     double utilization = 0;
     double temperature = 0;
@@ -110,6 +110,6 @@ public class CpuData extends MetricData {
       totalMillis += deltaMillis;
     }
 
-    return new CpuData(utilization, temperature, totalMillis, datetime);
+    return new CpuData(utilization, temperature, totalMillis, (long) datetime);
   }
 }

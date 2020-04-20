@@ -84,7 +84,7 @@ public class CpuCoreData extends MetricData {
 
     for (Map.Entry<Integer, List<CpuCoreData>> entry : metricsById.entrySet()) {
       int coreId = entry.getKey();
-      long datetime = 0;
+      double datetime = 0;
       long totalMillis = 0;
       double coreUtilization = 0.0;
 
@@ -95,7 +95,7 @@ public class CpuCoreData extends MetricData {
         totalMillis += deltaMillis;
       }
 
-      combinedMetrics.add(new CpuCoreData(coreId, coreUtilization, totalMillis, datetime));
+      combinedMetrics.add(new CpuCoreData(coreId, coreUtilization, totalMillis, (long) datetime));
     }
 
     return combinedMetrics;

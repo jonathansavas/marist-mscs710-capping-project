@@ -76,9 +76,9 @@ public class SystemData extends MetricData {
   }
 
   public static SystemData combine(List<SystemData> metrics) {
-    long datetime = 0;
+    double datetime = 0;
     long totalMillis = 0;
-    long upTime = 0;
+    double upTime = 0;
 
     for (SystemData data : metrics) {
       long deltaMillis = data.getDeltaMillis();
@@ -87,6 +87,6 @@ public class SystemData extends MetricData {
       totalMillis += deltaMillis;
     }
 
-    return new SystemData(upTime, totalMillis, datetime);
+    return new SystemData((long) upTime, totalMillis, (long) datetime);
   }
 }

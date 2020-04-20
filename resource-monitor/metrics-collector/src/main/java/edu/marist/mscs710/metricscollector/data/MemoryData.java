@@ -102,7 +102,7 @@ public class MemoryData extends MetricData {
   }
 
   public static MemoryData combine(List<MemoryData> metrics) {
-    long datetime = 0;
+    double datetime = 0;
     long totalMillis = 0;
     double utilization = 0.0;
     double pageFaults = 0.0;
@@ -115,6 +115,6 @@ public class MemoryData extends MetricData {
       totalMillis += deltaMillis;
     }
 
-    return new MemoryData(utilization, pageFaults, totalMillis, datetime);
+    return new MemoryData(utilization, pageFaults, totalMillis, (long) datetime);
   }
 }
