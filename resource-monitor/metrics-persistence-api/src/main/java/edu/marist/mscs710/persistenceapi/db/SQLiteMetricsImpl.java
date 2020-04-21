@@ -36,11 +36,12 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
   private MetricDeserializer metricDeser = new MetricDeserializer();
   private ObjectMapper objectMapper = new ObjectMapper();
 
-  private long nextPruneTime;
-
   private String dbUrl;
   private List<String> metricTypes;
   private List<String> prunables;
+
+  private long nextPruneTime;
+  private boolean autoPrune;
 
   /**
    * Constructs a new <tt>SQLiteMetricsImpl</tt>, which will use an existing
@@ -50,10 +51,11 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
    *
    * @param dbFilePath    path of the sqlite database file
    * @param dbSchemaPath  path of the sql database schema file
+   * @param autoPrune     if true, the database will prune itself every hour
    * @throws SQLException
    * @throws IOException
    */
-  public SQLiteMetricsImpl(String dbFilePath, String dbSchemaPath) throws SQLException, IOException {
+  public SQLiteMetricsImpl(String dbFilePath, String dbSchemaPath, boolean autoPrune) throws SQLException, IOException {
     this.dbUrl = createSqliteDbUrl(dbFilePath);
     executeSqlScript(dbSchemaPath);
     createPruneBoundTable();
@@ -63,9 +65,12 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       .filter(t -> ! t.equals(Fields.METRIC_TYPE_SYSTEM_CONSTANTS))
       .collect(Collectors.toList());
 
-    LOGGER.info("SQLiteMetricsImpl created for db file path '{}'", dbFilePath);
+    this.autoPrune = autoPrune;
 
-    prune();
+    LOGGER.info("SQLiteMetricsImpl created for db file path '{}' with 'autoPrune' = {}", dbFilePath, this.autoPrune);
+
+    if (autoPrune)
+      prune();
   }
 
   @Override
@@ -77,7 +82,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       return false;
     }
 
-    if (Instant.now().toEpochMilli() > nextPruneTime)
+    if (autoPrune && Instant.now().toEpochMilli() > nextPruneTime)
       prune();
 
     return true;
@@ -127,6 +132,8 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     return DriverManager.getConnection(dbUrl);
   }
 
+  // Statements that do not begin on a new line and in-line comments
+  // will cause this method to fail
   private void executeSqlScript(String dbSchemaPath) throws IOException, SQLException {
     try (BufferedReader br = new BufferedReader(
       new InputStreamReader(new FileInputStream(dbSchemaPath)))) {
@@ -151,6 +158,12 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     }
   }
 
+  /**
+   * Reduces the database size by combining metrics into snapshots of
+   * greater time intervals. Records 12-24 hours old will be combined into
+   * one minute snapshots, and any records older than 24 hours will be
+   * combined into one hour snapshots.
+   */
   public void prune() {
     LOGGER.info("Begin database pruning operation");
 
@@ -160,6 +173,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     for (String metricType : prunables) {
       long lowerBound = getLastPruneBound(metricType);
 
+      // Lower bound is inclusive, upper bound is exclusive
       if (prune(lowerBound, hourBound, metricType, ONE_HOUR_MS)) {
         LOGGER.info("Successfully pruned \"{}\" metrics from {} to {} in 1 hour windows",
           metricType, convertEpochMillisDateFormat(lowerBound), convertEpochMillisDateFormat(hourBound));
@@ -204,7 +218,7 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
 
       conn.commit();
     } catch (SQLException e1) {
-      LOGGER.error("Prune for metric type \"{}\" from {} to {} failed, rolling back changes",
+      LOGGER.error("Failed prune for \"{}\" metrics from {} to {}, rolling back changes",
         metricType, convertEpochMillisDateFormat(earliest), convertEpochMillisDateFormat(latest), e1);
 
       try {
@@ -228,29 +242,30 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
   }
 
   private List<? extends MetricData> combineMetrics(long earliest, long latest, String metricType, long windowSize) {
+    // Bucket metrics into windowSize (ms) buckets, combine each bucket, return all in a list
     switch (metricType) {
       case (Fields.METRIC_TYPE_CPU):
-        List<List<CpuData>> cpuMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, CpuData.class));
+        List<List<CpuData>> cpuMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, CpuData.class));
         return cpuMetrics == null ? null : cpuMetrics.stream().map(CpuData::combine).collect(Collectors.toList());
 
       case (Fields.METRIC_TYPE_CPU_CORE):
-        List<List<CpuCoreData>> cpuCoreMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, CpuCoreData.class));
+        List<List<CpuCoreData>> cpuCoreMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, CpuCoreData.class));
         return cpuCoreMetrics == null ? null : cpuCoreMetrics.stream().map(CpuCoreData::combine).flatMap(Collection::stream).collect(Collectors.toList());
 
       case (Fields.METRIC_TYPE_MEMORY):
-        List<List<MemoryData>> memoryMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, MemoryData.class));
+        List<List<MemoryData>> memoryMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, MemoryData.class));
         return memoryMetrics == null ? null : memoryMetrics.stream().map(MemoryData::combine).collect(Collectors.toList());
 
       case (Fields.METRIC_TYPE_NETWORK):
-        List<List<NetworkData>> networkMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, NetworkData.class));
+        List<List<NetworkData>> networkMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, NetworkData.class));
         return networkMetrics == null ? null : networkMetrics.stream().map(NetworkData::combine).collect(Collectors.toList());
 
       case (Fields.METRIC_TYPE_PROCESSES):
-        List<List<ProcessData>> processMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, ProcessData.class));
+        List<List<ProcessData>> processMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, ProcessData.class));
         return processMetrics == null ? null : processMetrics.stream().map(ProcessData::combine).flatMap(Collection::stream).collect(Collectors.toList());
 
       case (Fields.METRIC_TYPE_SYSTEM_METRICS):
-        List<List<SystemData>> systemMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, metricType, SystemData.class));
+        List<List<SystemData>> systemMetrics = bucketMetrics(windowSize, getMetricsInRange(earliest, latest, SystemData.class));
         return systemMetrics == null ? null : systemMetrics.stream().map(SystemData::combine).collect(Collectors.toList());
 
       default:
@@ -258,6 +273,18 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     }
   }
 
+  /**
+   * Groups metrics based on spans of time in milliseconds. All metrics that
+   * fall into each time bucket will be grouped together, regardless of the
+   * number of instances. The buckets will begin with the minimum timestamp
+   * in the list of metrics: [min,min+bucketSize), [min+bucketSize,min+2*bucketSize) ...
+   *
+   * @param bucketSize number of milliseconds in each time span
+   * @param metrics    list of metrics
+   * @param <T>        <tt>MetricData</tt> or its subtypes
+   * @return list of lists of metrics, grouped by bucketSize, or null if
+   *         <tt>metrics</tt> is null.
+   */
   public static <T extends MetricData> List<List<T>> bucketMetrics(long bucketSize, List<T> metrics) {
     if (metrics == null)
       return null;
@@ -273,7 +300,9 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       .values());
   }
 
-  public <T extends MetricData> List<T> getMetricsInRange(long earliest, long latest, String metricType, Class<T> clazz) {
+  @Override
+  public <T extends MetricData> List<T> getMetricsInRange(long earliest, long latest, Class<T> clazz) {
+    String metricType = MetricDeserializer.lookupMetricType(clazz);
     try (Connection conn = getSqliteConnection()) {
       ResultSet rs = getRecordsInRange(earliest, latest, metricType, conn);
 
@@ -282,12 +311,11 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
       while (rs.next()) {
 
         try {
-          metrics.add(createMetric(rs, metricType, clazz));
+          metrics.add(createMetric(rs, clazz));
         } catch (JsonProcessingException e) {
           LOGGER.error(e.getMessage(), e);
           return null;
         }
-
       }
 
       return metrics;
@@ -297,9 +325,19 @@ public class SQLiteMetricsImpl implements MetricsPersistenceService {
     }
   }
 
-  public <T extends Metric> T createMetric(ResultSet rs, String metricType, Class<T> clazz) throws SQLException, JsonProcessingException {
+  /**
+   * Creates a <tt>Metric</tt> object from the current row of the supplied
+   * <tt>ResultSet</tt>. This method does not advance the cursor.
+   *
+   * @param rs         <tt>ResultSet</tt> from an SQL query
+   * @param clazz      class corresponding to <tt>metricType</tt> to hold the returned metric data
+   * @param <T>        <tt>Metric</tt> and its subtypes
+   * @return metric data of type <tt>T</tt>
+   * @throws SQLException
+   * @throws JsonProcessingException
+   */
+  public <T extends Metric> T createMetric(ResultSet rs, Class<T> clazz) throws SQLException, JsonProcessingException {
     ObjectNode node = objectMapper.createObjectNode();
-    node.put(Fields.METRIC_TYPE, metricType);
 
     ResultSetMetaData rsmd = rs.getMetaData();
     int numColumns = rsmd.getColumnCount();

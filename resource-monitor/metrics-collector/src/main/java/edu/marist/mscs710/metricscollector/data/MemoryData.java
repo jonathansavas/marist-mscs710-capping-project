@@ -22,10 +22,10 @@ public class MemoryData extends MetricData {
     Fields.MEMORY_UTILIZATION + ") VALUES ";
 
   @JsonProperty(Fields.MEMORY_UTILIZATION)
-  private double memoryUtilization; // Pct memory in use
+  private double memoryUtilization;
 
   @JsonProperty(Fields.MEMORY_PAGE_FAULTS)
-  private double pageFaults; // during time span delta millis
+  private double pageFaults;
 
   /**
    * Constructs a new <tt>MemoryData</tt> with the supplied metrics.
@@ -42,10 +42,18 @@ public class MemoryData extends MetricData {
     this.epochMillisTime = epochMillisTime;
   }
 
+  /**
+   * Constructs a new <tt>MemoryData</tt> with the supplied metrics.
+   *
+   * @param memoryUtilization memory utilization from 0.0-1.0
+   * @param pageFaults        number of page faults per second during this snapshot
+   * @param deltaMillis       time covered by this snapshot
+   * @param epochMillisTime   epoch milli timestamp of this snapshot
+   */
   @JsonCreator
   public MemoryData(@JsonProperty(Fields.MEMORY_UTILIZATION) double memoryUtilization,
                     @JsonProperty(Fields.MEMORY_PAGE_FAULTS) double pageFaults,
-                    @JsonProperty(Fields.DELTA_MILLIS)long deltaMillis,
+                    @JsonProperty(Fields.DELTA_MILLIS) long deltaMillis,
                     @JsonProperty(Fields.DATETIME) long epochMillisTime) {
     this.memoryUtilization = memoryUtilization;
     this.pageFaults = pageFaults;
@@ -63,9 +71,9 @@ public class MemoryData extends MetricData {
   }
 
   /**
-   * Gets the number of page faults during this snapshot
+   * Gets the number of page faults per second during this snapshot
    *
-   * @return number of page faults
+   * @return page faults rate
    */
   public double getPageFaults() {
     return pageFaults;
@@ -101,6 +109,13 @@ public class MemoryData extends MetricData {
       memoryUtilization + ')' + ';';
   }
 
+  /**
+   * Combines a list of <tt>MemoryData</tt> into a single instance. This method
+   * takes a weighted average of all fields based on <tt>deltaMillis</tt>.
+   *
+   * @param metrics list of memory metrics
+   * @return an aggregate <tt>MemoryData</tt> instance
+   */
   public static MemoryData combine(List<MemoryData> metrics) {
     double datetime = 0;
     long totalMillis = 0;

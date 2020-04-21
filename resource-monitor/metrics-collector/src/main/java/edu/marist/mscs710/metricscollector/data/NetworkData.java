@@ -27,13 +27,13 @@ public class NetworkData extends MetricData {
   private static final int BITS_PER_BYTE = 8;
 
   @JsonProperty(Fields.NETWORK_SEND)
-  private double send; // During delta millis
+  private double send;
 
   @JsonProperty(Fields.NETWORK_RECEIVE)
-  private double receive; // During delta millis
+  private double receive;
 
   @JsonProperty(Fields.NETWORK_THROUGHPUT)
-  private long throughput; // Bits per second network capacity, sum over active network interfaces
+  private long throughput;
 
   /**
    * Constructs a new <tt>NetworkData</tt> with the supplied metrics.
@@ -52,6 +52,15 @@ public class NetworkData extends MetricData {
     this.epochMillisTime = epochMillisTime;
   }
 
+  /**
+   * Constructs a new <tt>NetworkData</tt> with the supplied metrics.
+   *
+   * @param send            kilobits per second sent rate during this snapshot
+   * @param receive         kilobits per second received rate during this snapshot
+   * @param throughput      total kilobits per second network capacity over active networks
+   * @param deltaMillis     time covered by this snapshot
+   * @param epochMillisTime epoch milli timestamp of this snapshot
+   */
   @JsonCreator
   public NetworkData(@JsonProperty(Fields.NETWORK_SEND)double send,
                      @JsonProperty(Fields.NETWORK_RECEIVE) double receive,
@@ -66,28 +75,28 @@ public class NetworkData extends MetricData {
   }
 
   /**
-   * Gets the bytes sent during this snapshot
+   * Gets the kilobits per second send rate.
    *
-   * @return number of bytes
+   * @return network send rate
    */
   public double getSend() {
     return send;
   }
 
   /**
-   * Gets the bytes received during this snapshot
+   * Gets the kilobits per second receive rate.
    *
-   * @return number of bytes
+   * @return network receive rate
    */
   public double getReceive() {
     return receive;
   }
 
   /**
-   * Gets the total network capacity over active network interfaces in bits per second.
+   * Gets the total network capacity over active network interfaces in kilobits per second.
    * A network interface is considered inactive after five minutes of inactivity.
    *
-   * @return speed in bits per second
+   * @return total network throughput
    */
   public long getThroughput() {
     return throughput;
@@ -126,6 +135,13 @@ public class NetworkData extends MetricData {
       throughput + ')' + ';';
   }
 
+  /**
+   * Combines a list of <tt>NetworkData</tt> into a single instance. This method
+   * takes a weighted average of all fields based on <tt>deltaMillis</tt>.
+   *
+   * @param metrics list of Network metrics
+   * @return an aggregate <tt>NetworkData</tt> instance
+   */
   public static NetworkData combine(List<NetworkData> metrics) {
     double datetime = 0;
     long totalMillis = 0;

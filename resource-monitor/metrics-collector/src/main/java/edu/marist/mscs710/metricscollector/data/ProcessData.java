@@ -44,16 +44,16 @@ public class ProcessData extends MetricData {
   private long upTime;
 
   @JsonProperty(Fields.PROCESSES_CPU_USAGE)
-  private double cpuUsage; // During previous delta millis
+  private double cpuUsage;
 
   @JsonProperty(Fields.PROCESSES_MEMORY)
-  private long memory; // Total bytes allocated to process and in RAM
+  private long memory;
 
   @JsonProperty(Fields.PROCESSES_KB_READ)
-  private double kbRead; // kb read from disk per second during previous delta millis
+  private double kbRead;
 
   @JsonProperty(Fields.PROCESSES_KB_WRITTEN)
-  private double kbWritten; // kb written to disk per second during previous delta millis
+  private double kbWritten;
 
   @JsonProperty(Fields.PROCESSES_STATE)
   private Processes.PidState pidState;
@@ -110,6 +110,21 @@ public class ProcessData extends MetricData {
     this.epochMillisTime = epochMillisTime;
   }
 
+  /**
+   * Constructs a new <tt>ProcessData</tt> with the supplied metrics.
+   *
+   * @param pid             process id
+   * @param name            name of the process
+   * @param startTime       start time of process as epoch milli timestamp
+   * @param upTime          number of milliseconds the process has been running
+   * @param cpuUsage        cpu usage of the process during this snapshot
+   * @param memory          total kilobytes bytes allocated to this process and in RAM
+   * @param kbRead          kilobytes per second read from disk during this snapshot
+   * @param kbWritten       kilobytes per second written to disk during this snapshot
+   * @param pidState        state of the process
+   * @param deltaMillis     time covered by this snapshot
+   * @param epochMillisTime epoch milli timestamp of this snapshot
+   */
   @JsonCreator
   public ProcessData(@JsonProperty(Fields.PROCESSES_PID) int pid,
                      @JsonProperty(Fields.PROCESSES_NAME) String name,
@@ -181,27 +196,27 @@ public class ProcessData extends MetricData {
   }
 
   /**
-   * Gets the total number of bytes allocated to this process and in RAM
+   * Gets the total number of kilobytes allocated to this process and in RAM
    *
-   * @return bytes of memory
+   * @return kilobytes of memory
    */
   public long getMemory() {
     return memory;
   }
 
   /**
-   * Gets the total number of bytes read from disk during this snapshot.
+   * Gets the number of kilobytes per second read from disk during this snapshot.
    *
-   * @return bytes read
+   * @return disk read rate
    */
   public double getKbRead() {
     return kbRead;
   }
 
   /**
-   * Gets the total number of bytes written to disk during this snapshot.
+   * Gets the number of kilobytes per second written to disk during this snapshot.
    *
-   * @return bytes read
+   * @return disk write rate
    */
   public double getKbWritten() {
     return kbWritten;
@@ -275,6 +290,15 @@ public class ProcessData extends MetricData {
       '\'' + pidState + '\'' + ')' + ';';
   }
 
+  /**
+   * Combines a list of <tt>ProcessData</tt> into single instances grouped by
+   * individual process. This method takes a weighted average of all fields
+   * based on <tt>deltaMillis</tt>.
+   *
+   * @param metrics list of Process metrics
+   * @return list of aggregated <tt>ProcessData</tt> instances, one for each
+   *         unique process
+   */
   public static List<ProcessData> combine(List<ProcessData> metrics) {
     List<ProcessData> sortedMetrics = sortChronologically(metrics);
 

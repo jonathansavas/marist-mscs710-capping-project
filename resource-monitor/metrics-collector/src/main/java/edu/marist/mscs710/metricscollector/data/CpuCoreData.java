@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 import static edu.marist.mscs710.metricscollector.utils.DataUtils.weightedAverage;
 
+/**
+ * Holds a snapshot of data for an individual CPU core.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CpuCoreData extends MetricData {
   public static final String SQL_INSERT_PREFIX = "INSERT INTO " +
@@ -27,6 +30,14 @@ public class CpuCoreData extends MetricData {
   @JsonProperty(Fields.CPU_CORE_CORE_UTILIZATION)
   private double coreUtilization;
 
+  /**
+   * Constructs a new <tt>CpuCoreData</tt> with the supplied metrics.
+   *
+   * @param coreId          id number of the CPU core
+   * @param coreUtilization core CPU usage during this snapshot
+   * @param deltaMillis     time covered by this snapshot
+   * @param epochMillisTime epoch milli timestamp of this snapshot
+   */
   @JsonCreator
   public CpuCoreData(@JsonProperty(Fields.CPU_CORE_CORE_ID) int coreId,
                      @JsonProperty(Fields.CPU_CORE_CORE_UTILIZATION) double coreUtilization,
@@ -38,10 +49,20 @@ public class CpuCoreData extends MetricData {
     this.epochMillisTime = epochMillisTime;
   }
 
+  /**
+   * Gets the core id.
+   *
+   * @return core id number
+   */
   public int getCoreId() {
     return coreId;
   }
 
+  /**
+   * Gets the core utilization.
+   *
+   * @return core utilization from 0.0-1.0
+   */
   public double getCoreUtilization() {
     return coreUtilization;
   }
@@ -76,6 +97,15 @@ public class CpuCoreData extends MetricData {
       coreId + ')' + ';';
   }
 
+  /**
+   * Combines a list of <tt>CpuCoreData</tt> into single instances grouped by
+   * core id. This method takes a weighted average of all fields based on
+   * <tt>deltaMillis</tt>.
+   *
+   * @param metrics list of CPU core metrics
+   * @return list of aggregated <tt>CpuCoreData</tt> instances, one for each
+   *         unique core id
+   */
   public static List<CpuCoreData> combine(List<CpuCoreData> metrics) {
     Map<Integer, List<CpuCoreData>> metricsById = metrics.stream()
       .collect(Collectors.groupingBy(CpuCoreData::getCoreId, Collectors.toList()));

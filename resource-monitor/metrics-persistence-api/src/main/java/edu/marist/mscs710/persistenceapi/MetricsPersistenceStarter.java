@@ -68,7 +68,8 @@ public class MetricsPersistenceStarter {
     try {
       metricsPersistenceService = new SQLiteMetricsImpl(
         dbDirectory + "/metrics.db",
-        dbDirectory + "/db_schema.sql");
+        dbDirectory + "/db_schema.sql",
+        true);
     } catch (SQLException | IOException e) {
       LOGGER.error(e.getMessage(), e);
       return;

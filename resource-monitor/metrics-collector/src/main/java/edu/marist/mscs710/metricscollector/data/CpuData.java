@@ -23,16 +23,16 @@ public class CpuData extends MetricData {
     Fields.CPU_TEMPERATURE + ") VALUES ";
 
   @JsonProperty(Fields.CPU_UTILIZATION)
-  private double utilization; // Total cpu usage during previous delta millis
+  private double utilization;
 
   @JsonProperty(Fields.CPU_TEMPERATURE)
-  private double temperature; // degrees C, 0.0 if not available, need elevated permissions in Windows
+  private double temperature;
 
   /**
    * Constructs a new <tt>CpuData</tt> with the supplied metrics.
    *
-   * @param utilization   overall CPU usage during this snapshot
-   * @param temperature         cpu temperature in degrees Celsius
+   * @param utilization     overall CPU usage during this snapshot
+   * @param temperature     cpu temperature in degrees Celsius
    * @param deltaMillis     time covered by this snapshot
    * @param epochMillisTime epoch milli timestamp of this snapshot
    */
@@ -96,6 +96,13 @@ public class CpuData extends MetricData {
       temperature + ')' + ';';
   }
 
+  /**
+   * Combines a list of <tt>CpuData</tt> into a single instance. This method
+   * takes a weighted average of all fields based on <tt>deltaMillis</tt>.
+   *
+   * @param metrics list of CPU metrics
+   * @return an aggregate <tt>CpuData</tt> instance
+   */
   public static CpuData combine(List<CpuData> metrics) {
     double datetime = 0;
     long totalMillis = 0;

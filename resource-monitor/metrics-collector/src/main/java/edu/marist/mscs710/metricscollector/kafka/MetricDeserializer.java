@@ -3,6 +3,7 @@ package edu.marist.mscs710.metricscollector.kafka;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.marist.mscs710.metricscollector.Metric;
 import edu.marist.mscs710.metricscollector.data.*;
 import edu.marist.mscs710.metricscollector.metric.Fields;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Class to deserialize <tt>Metric</tt> objects from Kafka. This class is
@@ -24,7 +26,7 @@ public class MetricDeserializer implements Deserializer<Metric> {
   private static final Logger LOGGER = LoggerFactory.getLogger(MetricDeserializer.class);
   private ObjectMapper objectMapper = new ObjectMapper();
 
-  private static final Map<String, Class<? extends Metric>> metricTypes =
+  private static final Map<String, Class<? extends Metric>> metricTypesToClasses =
     new HashMap<String, Class<? extends Metric>>() {{
       put(Fields.METRIC_TYPE_CPU, CpuData.class);
       put(Fields.METRIC_TYPE_CPU_CORE, CpuCoreData.class);
@@ -35,6 +37,10 @@ public class MetricDeserializer implements Deserializer<Metric> {
       put(Fields.METRIC_TYPE_SYSTEM_CONSTANTS, SystemConstants.class);
   }};
 
+  private static final Map<Class<? extends Metric>, String> classesToMetricTypes =
+    metricTypesToClasses.entrySet().stream()
+    .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+
   @Override
   public Metric deserialize(String s, byte[] bytes) {
     try {
@@ -44,7 +50,7 @@ public class MetricDeserializer implements Deserializer<Metric> {
       if (metricType == null)
         return new NullMetric();
 
-      Class<? extends Metric> clazz = metricTypes.get(metricType.asText());
+      Class<? extends Metric> clazz = metricTypesToClasses.get(metricType.asText());
 
       if (clazz == null)
         return new NullMetric();
@@ -57,10 +63,17 @@ public class MetricDeserializer implements Deserializer<Metric> {
   }
 
   public <T extends Metric> T deserialize(JsonNode json, Class<T> clazz) throws JsonProcessingException {
+    if (json.get(Fields.METRIC_TYPE) == null)
+      ((ObjectNode) json).put(Fields.METRIC_TYPE, classesToMetricTypes.get(clazz));
+
     return objectMapper.treeToValue(json, clazz);
   }
 
-  public Class<? extends Metric> lookupMetricClass(String metricType) {
-    return metricTypes.get(metricType);
+  public static Class<? extends Metric> lookupMetricClass(String metricType) {
+    return metricTypesToClasses.get(metricType);
+  }
+
+  public static String lookupMetricType(Class<? extends Metric> clazz) {
+    return classesToMetricTypes.get(clazz);
   }
 }

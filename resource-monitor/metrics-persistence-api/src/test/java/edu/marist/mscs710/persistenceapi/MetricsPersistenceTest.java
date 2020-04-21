@@ -37,7 +37,7 @@ public class MetricsPersistenceTest {
 
   @BeforeClass
   public static void prepare() throws IOException, SQLException {
-    sqlIte = new SQLiteMetricsImpl(dbFilePath, dbSchemaPath);
+    sqlIte = new SQLiteMetricsImpl(dbFilePath, dbSchemaPath, false);
   }
 
   private String topic;

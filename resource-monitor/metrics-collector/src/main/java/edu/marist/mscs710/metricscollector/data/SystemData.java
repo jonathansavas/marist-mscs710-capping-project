@@ -21,7 +21,7 @@ public class SystemData extends MetricData {
     Fields.SYSTEM_METRICS_UPTIME + ") VALUES ";
 
   @JsonProperty(Fields.SYSTEM_METRICS_UPTIME)
-  private long upTime; // Seconds since system boot
+  private long upTime;
 
   /**
    * Constructs a new <tt>SystemData</tt> with the supplied metrics.
@@ -75,6 +75,13 @@ public class SystemData extends MetricData {
       upTime + ')' + ';';
   }
 
+  /**
+   * Combines a list of <tt>SystemData</tt> into a single instance. This method
+   * takes a weighted average of all fields based on <tt>deltaMillis</tt>.
+   *
+   * @param metrics list of System metrics
+   * @return an aggregate <tt>SystemData</tt> instance
+   */
   public static SystemData combine(List<SystemData> metrics) {
     double datetime = 0;
     long totalMillis = 0;

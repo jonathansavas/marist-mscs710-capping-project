@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Specifies fields for the <tt>metricData</tt> associated with a
+ * Specifies fields for the metric data associated with a
  * <tt>Metric</tt> object.
  */
 public final class Fields {

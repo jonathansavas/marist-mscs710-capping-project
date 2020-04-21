@@ -1,6 +1,7 @@
 package edu.marist.mscs710.persistenceapi;
 
 import edu.marist.mscs710.metricscollector.Metric;
+import edu.marist.mscs710.metricscollector.data.MetricData;
 
 import java.util.List;
 
@@ -24,4 +25,15 @@ public interface MetricsPersistenceService {
    * @return list of metric types
    */
   List<String> getMetricTypes();
+
+  /**
+   * Retrieve metrics from the database within the specified time interval. This
+   *
+   * @param earliest   epoch milli timestamp of the earliest record, inclusive
+   * @param latest     epoch milli timestamp of the latest record, exclusive
+   * @param clazz      class corresponding to <tt>metricType</tt> to hold the returned metric data
+   * @param <T>        <tt>MetricData</tt> and its subtypes
+   * @return list of metric data of type <tt>T</tt>
+   */
+  <T extends MetricData> List<T> getMetricsInRange(long earliest, long latest, Class<T> clazz);
 }
