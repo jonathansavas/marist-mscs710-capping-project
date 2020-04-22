@@ -28,10 +28,10 @@ public class KafkaUtilsTest {
     Map<String, Object> deser = deserializeToMap(ser);
 
     Assert.assertEquals(Fields.METRIC_TYPE_CPU_CORE, deser.get(Fields.METRIC_TYPE));
-    Assert.assertTrue(metricData.getCoreId() == (Integer) deser.get(Fields.CPU_CORE_CORE_ID));
-    Assert.assertTrue(metricData.getCoreUtilization() == (Double) deser.get(Fields.CPU_CORE_CORE_UTILIZATION));
-    Assert.assertTrue(metricData.getDeltaMillis() == (Long) deser.get(Fields.CPU_CORE_DELTA_MILLIS));
-    Assert.assertTrue(metricData.getEpochMillisTime() == (Long) deser.get(Fields.CPU_CORE_DATETIME));
+    Assert.assertEquals(metricData.getCoreId(), deser.get(Fields.CPU_CORE_CORE_ID));
+    Assert.assertEquals(metricData.getCoreUtilization(), deser.get(Fields.CPU_CORE_CORE_UTILIZATION));
+    Assert.assertEquals(metricData.getDeltaMillis(), Long.parseLong(deser.get(Fields.CPU_CORE_DELTA_MILLIS).toString()));
+    Assert.assertEquals(metricData.getEpochMillisTime(), Long.parseLong(deser.get(Fields.CPU_CORE_DATETIME).toString()));
 
     CpuCoreData deserMetric = (CpuCoreData) metricDeserializer.deserialize("", ser);
 
@@ -46,10 +46,10 @@ public class KafkaUtilsTest {
     Map<String, Object> deser = deserializeToMap(ser);
 
     Assert.assertEquals(Fields.METRIC_TYPE_CPU, deser.get(Fields.METRIC_TYPE));
-    Assert.assertTrue(metricData.getUtilization() == (Double) deser.get(Fields.CPU_UTILIZATION));
-    Assert.assertTrue(metricData.getTemperature() == (Double) deser.get(Fields.CPU_TEMPERATURE));
-    Assert.assertTrue(metricData.getDeltaMillis() == (Long) deser.get(Fields.CPU_DELTA_MILLIS));
-    Assert.assertTrue(metricData.getEpochMillisTime() == (Long) deser.get(Fields.CPU_DATETIME));
+    Assert.assertEquals(metricData.getUtilization(), deser.get(Fields.CPU_UTILIZATION));
+    Assert.assertEquals(metricData.getTemperature(), deser.get(Fields.CPU_TEMPERATURE));
+    Assert.assertEquals(metricData.getDeltaMillis(), Long.parseLong(deser.get(Fields.CPU_DELTA_MILLIS).toString()));
+    Assert.assertEquals(metricData.getEpochMillisTime(), Long.parseLong(deser.get(Fields.CPU_DATETIME).toString()));
 
     CpuData deserMetric = (CpuData) metricDeserializer.deserialize("", ser);
 
@@ -65,10 +65,10 @@ public class KafkaUtilsTest {
     Map<String, Object> deser = deserializeToMap(ser);
 
     Assert.assertEquals(Fields.METRIC_TYPE_MEMORY, deser.get(Fields.METRIC_TYPE));
-    Assert.assertTrue(metricData.getMemoryUtilization() == (Double) deser.get(Fields.MEMORY_UTILIZATION));
-    Assert.assertTrue(metricData.getPageFaults() == (Double) deser.get(Fields.MEMORY_PAGE_FAULTS));
-    Assert.assertTrue(metricData.getDeltaMillis() == (Long) deser.get(Fields.MEMORY_DELTA_MILLIS));
-    Assert.assertTrue(metricData.getEpochMillisTime() == (Long) deser.get(Fields.MEMORY_DATETIME));
+    Assert.assertEquals(metricData.getMemoryUtilization(), deser.get(Fields.MEMORY_UTILIZATION));
+    Assert.assertEquals(metricData.getPageFaults(), deser.get(Fields.MEMORY_PAGE_FAULTS));
+    Assert.assertEquals(metricData.getDeltaMillis(), Long.parseLong(deser.get(Fields.MEMORY_DELTA_MILLIS).toString()));
+    Assert.assertEquals(metricData.getEpochMillisTime(), Long.parseLong(deser.get(Fields.MEMORY_DATETIME).toString()));
 
     MemoryData deserMetric = (MemoryData) metricDeserializer.deserialize("", ser);
 
@@ -84,11 +84,11 @@ public class KafkaUtilsTest {
     Map<String, Object> deser = deserializeToMap(ser);
 
     Assert.assertEquals(Fields.METRIC_TYPE_NETWORK, deser.get(Fields.METRIC_TYPE));
-    Assert.assertTrue(metricData.getThroughput() == (Long) deser.get(Fields.NETWORK_THROUGHPUT));
-    Assert.assertTrue(metricData.getSend() == (Double) deser.get(Fields.NETWORK_SEND));
-    Assert.assertTrue(metricData.getReceive() == (Double) deser.get(Fields.NETWORK_RECEIVE));
-    Assert.assertTrue(metricData.getDeltaMillis() == (Long) deser.get(Fields.NETWORK_DELTA_MILLIS));
-    Assert.assertTrue(metricData.getEpochMillisTime() == (Long) deser.get(Fields.NETWORK_DATETIME));
+    Assert.assertEquals(metricData.getThroughput(), Long.parseLong(deser.get(Fields.NETWORK_THROUGHPUT).toString()));
+    Assert.assertEquals(metricData.getSend(), deser.get(Fields.NETWORK_SEND));
+    Assert.assertEquals(metricData.getReceive(), deser.get(Fields.NETWORK_RECEIVE));
+    Assert.assertEquals(metricData.getDeltaMillis(), Long.parseLong(deser.get(Fields.NETWORK_DELTA_MILLIS).toString()));
+    Assert.assertEquals(metricData.getEpochMillisTime(), Long.parseLong(deser.get(Fields.NETWORK_DATETIME).toString()));
 
     NetworkData deserMetric = (NetworkData) metricDeserializer.deserialize("", ser);
 
@@ -104,17 +104,17 @@ public class KafkaUtilsTest {
     Map<String, Object> deser = deserializeToMap(ser);
 
     Assert.assertEquals(Fields.METRIC_TYPE_PROCESSES, deser.get(Fields.METRIC_TYPE));
-    Assert.assertTrue(metricData.getPid() == (Integer) deser.get(Fields.PROCESSES_PID));
+    Assert.assertEquals(metricData.getPid(), deser.get(Fields.PROCESSES_PID));
     Assert.assertEquals(metricData.getName(), deser.get(Fields.PROCESSES_NAME).toString());
-    Assert.assertTrue(metricData.getStartTime() == (Long) deser.get(Fields.PROCESSES_START_TIME));
-    Assert.assertTrue(metricData.getUpTime() == (Long) deser.get(Fields.PROCESSES_UPTIME));
-    Assert.assertTrue(metricData.getCpuUsage() == (Double) deser.get(Fields.PROCESSES_CPU_USAGE));
-    Assert.assertTrue(metricData.getMemory() == (Long) deser.get(Fields.PROCESSES_MEMORY));
-    Assert.assertTrue(metricData.getKbRead() == (Double) deser.get(Fields.PROCESSES_KB_READ));
-    Assert.assertTrue(metricData.getKbWritten() == (Double) deser.get(Fields.PROCESSES_KB_WRITTEN));
-    Assert.assertTrue(metricData.getPidState() == Processes.PidState.valueOf(deser.get(Fields.PROCESSES_STATE).toString()));
-    Assert.assertTrue(metricData.getDeltaMillis() == (Long) deser.get(Fields.PROCESSES_DELTA_MILLIS));
-    Assert.assertTrue(metricData.getEpochMillisTime() == (Long) deser.get(Fields.PROCESSES_DATETIME));
+    Assert.assertEquals(metricData.getStartTime(), Long.parseLong(deser.get(Fields.PROCESSES_START_TIME).toString()));
+    Assert.assertEquals(metricData.getUpTime(), Long.parseLong(deser.get(Fields.PROCESSES_UPTIME).toString()));
+    Assert.assertEquals(metricData.getCpuUsage(), deser.get(Fields.PROCESSES_CPU_USAGE));
+    Assert.assertEquals(metricData.getMemory(), Long.parseLong(deser.get(Fields.PROCESSES_MEMORY).toString()));
+    Assert.assertEquals(metricData.getKbRead(), deser.get(Fields.PROCESSES_KB_READ));
+    Assert.assertEquals(metricData.getKbWritten(), deser.get(Fields.PROCESSES_KB_WRITTEN));
+    Assert.assertSame(metricData.getPidState(), Processes.PidState.valueOf(deser.get(Fields.PROCESSES_STATE).toString()));
+    Assert.assertEquals(metricData.getDeltaMillis(), Long.parseLong(deser.get(Fields.PROCESSES_DELTA_MILLIS).toString()));
+    Assert.assertEquals(metricData.getEpochMillisTime(), Long.parseLong(deser.get(Fields.PROCESSES_DATETIME).toString()));
 
     ProcessData deserMetric = (ProcessData) metricDeserializer.deserialize("", ser);
 
@@ -130,9 +130,9 @@ public class KafkaUtilsTest {
     Map<String, Object> deser = deserializeToMap(ser);
 
     Assert.assertEquals(Fields.METRIC_TYPE_SYSTEM_METRICS, deser.get(Fields.METRIC_TYPE));
-    Assert.assertTrue(metricData.getUpTime() == (Long) deser.get(Fields.SYSTEM_METRICS_UPTIME));
-    Assert.assertTrue(metricData.getDeltaMillis() == (Long) deser.get(Fields.SYSTEM_METRICS_DELTA_MILLIS));
-    Assert.assertTrue(metricData.getEpochMillisTime() == (Long) deser.get(Fields.SYSTEM_METRICS_DATETIME));
+    Assert.assertEquals(metricData.getUpTime(), Long.parseLong(deser.get(Fields.SYSTEM_METRICS_UPTIME).toString()));
+    Assert.assertEquals(metricData.getDeltaMillis(), Long.parseLong(deser.get(Fields.SYSTEM_METRICS_DELTA_MILLIS).toString()));
+    Assert.assertEquals(metricData.getEpochMillisTime(), Long.parseLong(deser.get(Fields.SYSTEM_METRICS_DATETIME).toString()));
 
     SystemData deserMetric = (SystemData) metricDeserializer.deserialize("", ser);
 
@@ -148,10 +148,10 @@ public class KafkaUtilsTest {
     Map<String, Object> deser = deserializeToMap(ser);
 
     Assert.assertEquals(Fields.METRIC_TYPE_SYSTEM_CONSTANTS, deser.get(Fields.METRIC_TYPE));
-    Assert.assertTrue(metricData.getTotalMemGb() == (Double) deser.get(Fields.SYSTEM_CONSTANTS_TOTAL_MEMORY));
-    Assert.assertTrue(metricData.getPhysicalCores() == (Integer) deser.get(Fields.SYSTEM_CONSTANTS_PHYSICAL_CORES));
-    Assert.assertTrue(metricData.getLogicalCores() == (Integer) deser.get(Fields.SYSTEM_CONSTANTS_LOGICAL_CORES));
-    Assert.assertTrue(metricData.getCpuSpeed() == (Double) deser.get(Fields.SYSTEM_CONSTANTS_CPU_SPEED));
+    Assert.assertEquals(metricData.getTotalMemGb(), deser.get(Fields.SYSTEM_CONSTANTS_TOTAL_MEMORY));
+    Assert.assertEquals(metricData.getPhysicalCores(), deser.get(Fields.SYSTEM_CONSTANTS_PHYSICAL_CORES));
+    Assert.assertEquals(metricData.getLogicalCores(), deser.get(Fields.SYSTEM_CONSTANTS_LOGICAL_CORES));
+    Assert.assertEquals(metricData.getCpuSpeed(), deser.get(Fields.SYSTEM_CONSTANTS_CPU_SPEED));
 
     SystemConstants deserMetric = (SystemConstants) metricDeserializer.deserialize("", ser);
 
