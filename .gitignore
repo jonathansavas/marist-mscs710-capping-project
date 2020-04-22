@@ -18,6 +18,7 @@ Thumbs.db
 *.cache
 *.ilk
 *.log
+**/logs/*
 *.lib
 *.sbr
 bin/*
@@ -29,3 +30,4 @@ target/
 out/
 */extracted/*
 lib_managed/*
+*.db
