@@ -135,7 +135,7 @@ public class ProcessData extends MetricData {
                      @JsonProperty(Fields.PROCESSES_KB_READ) double kbRead,
                      @JsonProperty(Fields.PROCESSES_KB_WRITTEN) double kbWritten,
                      @JsonProperty(Fields.PROCESSES_STATE) Processes.PidState pidState,
-                     @JsonProperty(Fields.DELTA_MILLIS)long deltaMillis,
+                     @JsonProperty(Fields.DELTA_MILLIS) long deltaMillis,
                      @JsonProperty(Fields.DATETIME) long epochMillisTime) {
     this.pid = pid;
     this.name = name;

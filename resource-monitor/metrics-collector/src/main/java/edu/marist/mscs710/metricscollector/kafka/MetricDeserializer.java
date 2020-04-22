@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Class to deserialize <tt>Metric</tt> objects from Kafka. This class is
+ * Class to deserialize <tt>Metric</tt> objects. This class is
  * not thread safe.
  */
 public class MetricDeserializer implements Deserializer<Metric> {
@@ -62,6 +62,15 @@ public class MetricDeserializer implements Deserializer<Metric> {
     }
   }
 
+  /**
+   * Deserializes a <tt>JsonNode</tt> to the specified class.
+   *
+   * @param json  json data to deserialize
+   * @param clazz class to hold the json data
+   * @param <T>   <tt>Metric</tt>
+   * @return deserialized data
+   * @throws JsonProcessingException if the data cannot be deserialized to <tt>T</tt>
+   */
   public <T extends Metric> T deserialize(JsonNode json, Class<T> clazz) throws JsonProcessingException {
     if (json.get(Fields.METRIC_TYPE) == null)
       ((ObjectNode) json).put(Fields.METRIC_TYPE, classesToMetricTypes.get(clazz));
@@ -69,10 +78,22 @@ public class MetricDeserializer implements Deserializer<Metric> {
     return objectMapper.treeToValue(json, clazz);
   }
 
+  /**
+   * Gets the class type associated with a <tt>metricType</tt>.
+   *
+   * @param metricType type of the metric
+   * @return class of <tt>metricType</tt>, or null if mapping cannot be found
+   */
   public static Class<? extends Metric> lookupMetricClass(String metricType) {
     return metricTypesToClasses.get(metricType);
   }
 
+  /**
+   * Gets the metric type associated with a certain <tt>Metric</tt> class
+   *
+   * @param clazz <tt>Metric</tt> class
+   * @return metric type, or null if mapping cannot be found
+   */
   public static String lookupMetricType(Class<? extends Metric> clazz) {
     return classesToMetricTypes.get(clazz);
   }

@@ -1,7 +1,7 @@
 package edu.marist.mscs710.metricscollector;
 
 /**
- * Provides a common interface to convert group <tt>Metric</tt> data and perform
+ * Provides a common interface to group <tt>Metric</tt> data and perform
  * various operations.
  */
 public interface Metric {
