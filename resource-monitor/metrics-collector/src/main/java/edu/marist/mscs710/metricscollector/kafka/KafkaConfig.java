@@ -35,11 +35,11 @@ public class KafkaConfig {
     /**
      * Read from the earliest available message on the topic.
      */
-    EARLIEST, // We probably want this for the database.
+    EARLIEST,
     /**
      * Read from the latest available message.
      */
-    LATEST,  // We probably want this for UI live data.
+    LATEST,
     /**
      * No policy. Consumers have to implement a custom policy, otherwise the
      * consumer throws an exception.

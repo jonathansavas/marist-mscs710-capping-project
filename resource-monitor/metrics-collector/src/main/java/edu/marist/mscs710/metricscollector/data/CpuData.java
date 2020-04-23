@@ -39,7 +39,7 @@ public class CpuData extends MetricData {
   @JsonCreator
   public CpuData(@JsonProperty(Fields.CPU_UTILIZATION) double utilization,
                  @JsonProperty(Fields.CPU_TEMPERATURE) double temperature,
-                 @JsonProperty(Fields.DELTA_MILLIS)long deltaMillis,
+                 @JsonProperty(Fields.DELTA_MILLIS) long deltaMillis,
                  @JsonProperty(Fields.DATETIME) long epochMillisTime) {
     this.utilization = utilization;
     this.temperature = temperature;

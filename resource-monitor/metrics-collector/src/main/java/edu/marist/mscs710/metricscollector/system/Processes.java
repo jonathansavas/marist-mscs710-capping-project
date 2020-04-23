@@ -101,8 +101,8 @@ public class Processes implements MetricSource {
       boolean recycled = isRecycledPid(prior, p);
 
       if (!recycled)
-        p.setStartTime(prior.getStartTime()); // start time has +- 1 ms error between process updates, so update
-                                            // this to always return original start time, this is RUNNING case
+        p.setStartTime(prior.getStartTime()); // start time has +- 11 ms error between process updates, so update
+                                              // this to always return original start time, this is RUNNING case
       return new ProcessData(
         pid,
         p.getName(),

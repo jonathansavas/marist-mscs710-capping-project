@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class to serialize <tt>Metric</tt> objects to Kafka.
+ * Class to serialize <tt>Metric</tt> objects.
  */
 public class MetricSerializer implements Serializer<Metric> {
   private static final Logger LOGGER = LoggerFactory.getLogger(MetricSerializer.class);
