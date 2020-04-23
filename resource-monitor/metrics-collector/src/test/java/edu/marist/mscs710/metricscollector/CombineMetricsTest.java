@@ -42,8 +42,8 @@ public class CombineMetricsTest {
 
     Assert.assertEquals(deltaMillis, combined.getDeltaMillis());
     Assert.assertEquals(datetime, combined.getEpochMillisTime(), 1.0);
-    Assert.assertEquals(utilization, combined.getUtilization(), 1.0);
-    Assert.assertEquals(temperature, combined.getTemperature(), 1.0);
+    Assert.assertEquals(utilization, combined.getUtilization(), 0.0001);
+    Assert.assertEquals(temperature, combined.getTemperature(), 0.0001);
   }
 
 }

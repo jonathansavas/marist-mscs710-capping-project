@@ -70,6 +70,9 @@
                             <target>
                                 <untar src="target/kafka/kafka_${kafka-scala.version}-${kafka.version}.tgz" dest="target/kafka" compression="gzip" />
                                 <delete file="target/kafka/kafka_${kafka-scala.version}-${kafka.version}.tgz" />
+                                <copy todir="target/kafka/kafka_${kafka-scala.version}-${kafka.version}/bin/windows" overwrite="true">
+                                    <fileset dir="kafka-scripts/windows"/>
+                                </copy>
                             </target>
                         </configuration>
                         <goals>
