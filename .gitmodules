@@ -1,0 +1,7 @@
+
+[submodule "capping_ui"]
+	path = capping_ui
+	url = https://github.com/tf3193/capping_ui
+[submodule "capping-api-server"]
+	path = capping-api-server
+	url = https://github.com/tf3193/capping-api-server
