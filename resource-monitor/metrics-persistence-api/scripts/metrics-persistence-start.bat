@@ -2,10 +2,6 @@
 
 title Metrics Persistence
 
-set "SCRIPT_PATH=%~dp0"
-cd "%SCRIPT_PATH%"
-cd ..
+set "METRICS_PERSISTENCE_HOME=%~dp0\.."
 
-set "APP_HOME=%CD%"
-
-java -cp "%APP_HOME%;%APP_HOME%/config;%APP_HOME%/libs/*" ${mainClass}
+java -cp "%METRICS_PERSISTENCE_HOME%;%METRICS_PERSISTENCE_HOME%/config;%METRICS_PERSISTENCE_HOME%/libs/*" ${mainClass}

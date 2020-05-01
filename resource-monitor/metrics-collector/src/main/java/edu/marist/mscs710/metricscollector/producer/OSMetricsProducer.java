@@ -181,10 +181,11 @@ public class OSMetricsProducer implements MetricsProducer {
     LOGGER.info("Started metrics production thread");
 
     while (collecting.get()) {
-      long sleepTime;
-      while (collecting.get() && (sleepTime = getSleepTime()) > 0) {
+      long sleepTime = getSleepTime();
+      while (collecting.get() && sleepTime > 0) {
         try {
           Thread.sleep(sleepTime);
+          sleepTime = getSleepTime();
         } catch (InterruptedException e) {
           LOGGER.error(e.getMessage(), e);
           return;
@@ -211,6 +212,9 @@ public class OSMetricsProducer implements MetricsProducer {
   private long getSleepTime() {
     long timeRemaining = nextProduceTime.get() - Instant.now().toEpochMilli();
 
+    // Control sleep time while waiting for next produce time
+    // Sleep a shorter length of time the closer we get
+    // These numbers are somewhat arbitrary
     if (timeRemaining < 15)
       return 0;
     else if (timeRemaining < 100)

@@ -53,7 +53,14 @@
                 <fileSets>
                     <fileSet>
                         <outputDirectory>./</outputDirectory>
-                        <directory>target/scripts</directory>
+                        <directory>target</directory>
+                        <includes>
+                            <include>ui/</include>
+                        </includes>
+                    </fileSet>
+                    <fileSet>
+                        <outputDirectory>./</outputDirectory>
+                        <directory>target/scripts/app</directory>
                     </fileSet>
                 </fileSets>
             </sources>

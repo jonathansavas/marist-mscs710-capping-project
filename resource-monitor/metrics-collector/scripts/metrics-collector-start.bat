@@ -2,10 +2,6 @@
 
 title Metrics Collector
 
-set "SCRIPT_PATH=%~dp0"
-cd "%SCRIPT_PATH%"
-cd ..
+set "METRICS_COLLECTOR_HOME=%~dp0\.."
 
-set "APP_HOME=%CD%"
-
-java -cp "%APP_HOME%;%APP_HOME%/config;%APP_HOME%/libs/*" ${mainClass}
+java -cp "%METRICS_COLLECTOR_HOME%;%METRICS_COLLECTOR_HOME%/config;%METRICS_COLLECTOR_HOME%/libs/*" ${mainClass}

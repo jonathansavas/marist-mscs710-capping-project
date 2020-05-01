@@ -4,6 +4,7 @@ import edu.marist.mscs710.metricscollector.producer.OSMetricsProducer;;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.config.TopicConfig;
 import org.apache.kafka.common.errors.TimeoutException;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,8 @@ public class MetricsCollectorStarter {
   private static final Logger LOGGER = LoggerFactory.getLogger(MetricsCollectorStarter.class);
 
   private static final String PROPERTIES_FILE = "application.properties";
-  private static final int REQUEST_TIMEOUT_MS = 1000 * 30;
+  private static final int REQUEST_TIMEOUT_MS = 1000 * 90;
+  private static final int RECONNECT_BACKOFF_MAX_MS = 1000 * 30;
   private static final int RUNFILE_CHECK_INTERVAL_MS = 1000 * 2;
   private static final String DEFAULT_TOPIC = "resource-monitor-metrics";
   private static final String DEFAULT_BROKER = "localhost:9092";
@@ -51,13 +53,13 @@ public class MetricsCollectorStarter {
 
     try (AdminClient kafkaAdminClient = createKafkaAdminClient(kafkaBroker)) {
       // Test broker connection and create topic if necessary
-      if (!kafkaAdminClient.listTopics().names().get().contains(topic)) {
+      if (! kafkaAdminClient.listTopics().names().get().contains(topic)) {
         createTopic(kafkaAdminClient, topic);
       }
     } catch (TimeoutException | InterruptedException | ExecutionException e) {
       LOGGER.error(e.getMessage(), e);
       return;
-    }
+    } catch (TopicExistsException ignored) {}
 
     File runFile = new File(RUNFILE);
 
@@ -92,6 +94,7 @@ public class MetricsCollectorStarter {
     Properties adminProps = new Properties();
     adminProps.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBroker);
     adminProps.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, REQUEST_TIMEOUT_MS);
+    adminProps.put(AdminClientConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG, RECONNECT_BACKOFF_MAX_MS);
 
     return KafkaAdminClient.create(adminProps);
   }
@@ -102,7 +105,7 @@ public class MetricsCollectorStarter {
     NewTopic metricsTopic = new NewTopic(topic, 1, (short) 1);
 
     Map<String, String> configs = metricsTopic.configs() == null ? new HashMap<>() : metricsTopic.configs();
-    configs.put(TopicConfig.RETENTION_MS_CONFIG, Long.toString(LOG_RETENTION_HOURS * 60 * 60 * 1000));
+    configs.put(TopicConfig.RETENTION_MS_CONFIG, Long.toString(LOG_RETENTION_HOURS * 60 * 60 * 1000)); // Hours to MS
     metricsTopic.configs(configs);
 
     CreateTopicsResult result = adminClient.createTopics(Collections.singletonList(metricsTopic));

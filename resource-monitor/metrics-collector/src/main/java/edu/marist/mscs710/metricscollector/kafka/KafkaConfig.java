@@ -23,6 +23,8 @@ import java.util.function.Consumer;
  * Configuration class of Kafka producers and consumers.
  */
 public class KafkaConfig {
+  private static final int REQUEST_TIMEOUT_MS = 1000 * 90;
+  private static final int RECONNECT_BACKOFF_MAX_MS = 1000 * 30;
   private static final long DEFAULT_IDLE_BETWEEN_POLLS = 500; // ms
   private static final OffsetResetPolicy DEFAULT_OFFSET_RESET_POLICY = OffsetResetPolicy.EARLIEST;
 
@@ -81,6 +83,8 @@ public class KafkaConfig {
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, MetricDeserializer.class);
     props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, resetPolicy.toString().toLowerCase());
+    props.put(ConsumerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG, RECONNECT_BACKOFF_MAX_MS);
+    props.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, REQUEST_TIMEOUT_MS);
 
     return props;
   }

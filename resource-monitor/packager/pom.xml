@@ -11,6 +11,39 @@
 
     <artifactId>packager</artifactId>
 
+    <properties>
+        <kafka-full-version>kafka_${kafka-scala.version}-${kafka.version}</kafka-full-version>
+        <kafka-target>target/kafka/${kafka-full-version}</kafka-target>
+        <capping-project-dir>${project.basedir}/../..</capping-project-dir>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <shell-exe>cmd</shell-exe>
+                <flutter-build-args>/c flutter clean &amp;&amp; flutter build web</flutter-build-args>
+            </properties>
+        </profile>
+        <profile>
+            <id>linux</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                </os>
+            </activation>
+            <properties>
+                <shell-exe>/bin/sh</shell-exe>
+                <flutter-build-args>-c "flutter clean &amp;&amp; flutter build web"</flutter-build-args>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -64,14 +97,29 @@
                 <inherited>false</inherited>
                 <executions>
                     <execution>
-                        <id>extract-kafka</id>
+                        <id>prepare-external-artifacts</id>
                         <phase>prepare-package</phase>
                         <configuration>
                             <target>
-                                <untar src="target/kafka/kafka_${kafka-scala.version}-${kafka.version}.tgz" dest="target/kafka" compression="gzip" />
-                                <delete file="target/kafka/kafka_${kafka-scala.version}-${kafka.version}.tgz" />
-                                <copy todir="target/kafka/kafka_${kafka-scala.version}-${kafka.version}/bin/windows" overwrite="true">
-                                    <fileset dir="kafka-scripts/windows"/>
+                                <untar src="${kafka-target}.tgz" dest="target/kafka" compression="gzip" />
+                                <delete file="${kafka-target}.tgz" />
+                                <copy todir="${kafka-target}/bin/windows" overwrite="true">
+                                    <fileset dir="scripts/kafka/windows"/>
+                                </copy>
+                                <exec dir="${capping-project-dir}/capping_ui" executable="${shell-exe}" failonerror="true">
+                                    <arg line="${flutter-build-args}"/>
+                                </exec>
+                                <copy todir="target/ui" overwrite="true">
+                                    <fileset dir="${capping-project-dir}/capping_ui/build"/>
+                                </copy>
+                                <copy todir="target/ui" overwrite="true">
+                                    <fileset dir="${capping-project-dir}/capping-api-server">
+                                        <include name="*.py"/>
+                                        <exclude name="*test*"/>
+                                    </fileset>
+                                </copy>
+                                <copy todir="target/ui" overwrite="true">
+                                    <fileset dir="scripts/ui"/>
                                 </copy>
                             </target>
                         </configuration>
