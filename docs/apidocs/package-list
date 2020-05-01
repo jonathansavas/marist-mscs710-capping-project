@@ -1,0 +1,10 @@
+edu.marist.mscs710.metricscollector
+edu.marist.mscs710.metricscollector.data
+edu.marist.mscs710.metricscollector.kafka
+edu.marist.mscs710.metricscollector.metric
+edu.marist.mscs710.metricscollector.producer
+edu.marist.mscs710.metricscollector.system
+edu.marist.mscs710.metricscollector.utils
+edu.marist.mscs710.persistenceapi
+edu.marist.mscs710.persistenceapi.db
+edu.marist.mscs710.persistenceapi.utils

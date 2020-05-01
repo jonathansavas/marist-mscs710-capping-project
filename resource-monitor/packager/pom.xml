@@ -121,6 +121,10 @@
                                 <copy todir="target/ui" overwrite="true">
                                     <fileset dir="scripts/ui"/>
                                 </copy>
+                                <delete dir="${capping-project-dir}/docs/apidocs"/>
+                                <copy todir="${capping-project-dir}/docs/apidocs" overwrite="true">
+                                    <fileset dir="${capping-project-dir}/resource-monitor/target/site/apidocs"/>
+                                </copy>
                             </target>
                         </configuration>
                         <goals>
