@@ -6,7 +6,7 @@ This project implements an operating system resource monitor in Java, distributi
 data via [Kafka](https://kafka.apache.org/). Any number of consumers can then consume this live metric data 
 independently of one another via the Kafka server. Currently, these consumers are 
 a web-based GUI built with [Flutter](https://flutter.dev/docs), and a [SQLite](https://www.sqlite.org/index.html) 
-database. We currently serve CPU, CPU Core, Network, Memory and Process metrics. 
+database. We currently serve CPU, CPU Core, Network, Memory and Process metrics. Link to [javadoc](https://jonathansavas.github.io/marist-mscs710-capping-project/apidocs/overview-summary.html).
 
 
 ## Software Flow
