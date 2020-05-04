@@ -16,7 +16,7 @@ database. We currently serve CPU, CPU Core, Network, Memory and Process metrics.
 
 ## Metrics
 
-Fields associated with each metric type and their units [can be found here](https://github.com/jonathansavas/marist-mscs710-capping-project/blob/master/docs/apidocs/edu/marist/mscs710/metricscollector/metric/Fields.html).
+Fields associated with each metric type and their units [can be found here](https://jonathansavas.github.io/marist-mscs710-capping-project/apidocs/edu/marist/mscs710/metricscollector/metric/Fields.html).
 
 
 ## Graphical User Interface
