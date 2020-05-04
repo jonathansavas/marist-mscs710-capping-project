@@ -20,13 +20,25 @@ if exist "%KAFKA_HOME%" (
 start /d %RESOURCE_MONITOR_HOME%\metrics-collector /min %RESOURCE_MONITOR_HOME%\metrics-collector\bin\metrics-collector-start.bat
 start /d %RESOURCE_MONITOR_HOME%\metrics-persistence /min %RESOURCE_MONITOR_HOME%\metrics-persistence\bin\metrics-persistence-start.bat
 
-for /l %%i in (1, 1, 12) do (
-    timeout /t 5 /nobreak >nul 2>&1
-    tasklist /fi "WINDOWTITLE eq %KAFKA_TITLE%" | findstr [0-9] >nul 2>&1
-    if "!ERRORLEVEL!" == "0" (
-		taskkill /fi "WINDOWTITLE eq %KAFKA_TITLE%" >nul 2>&1
-        start "%KAFKA_TITLE%" /d %KAFKA_HOME% /min %KAFKA_HOME%\bin\windows\kafka-server-start.bat %KAFKA_HOME%\config\server.properties
+echo Resource monitor started
+
+if exist "%KAFKA_HOME%" (
+
+    echo Checking Kafka health for 60 seconds ...
+
+    for /l %%i in (1, 1, 12) do (
+
+        timeout /t 5 /nobreak >nul 2>&1
+        tasklist /fi "WINDOWTITLE eq %KAFKA_TITLE%" | findstr [0-9] >nul 2>&1
+
+        if "!ERRORLEVEL!" == "0" (
+            echo Kafka server failed, starting again ...
+            taskkill /fi "WINDOWTITLE eq %KAFKA_TITLE%" >nul 2>&1
+            start "%KAFKA_TITLE%" /d %KAFKA_HOME% /min %KAFKA_HOME%\bin\windows\kafka-server-start.bat %KAFKA_HOME%\config\server.properties
+        )
     )
 )
+
+timeout /t 5 /nobreak >nul 2>&1
 
 exit
