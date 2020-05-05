@@ -27,7 +27,7 @@
             </activation>
             <properties>
                 <shell-exe>cmd</shell-exe>
-                <flutter-build-args>/c flutter clean &amp;&amp; flutter build web</flutter-build-args>
+                <flutter-build-args>/c flutter clean &amp;&amp; flutter pub get &amp;&amp; flutter build web</flutter-build-args>
             </properties>
         </profile>
         <profile>
@@ -39,7 +39,7 @@
             </activation>
             <properties>
                 <shell-exe>/bin/sh</shell-exe>
-                <flutter-build-args>-c "flutter clean &amp;&amp; flutter build web"</flutter-build-args>
+                <flutter-build-args>-c "flutter clean &amp;&amp; flutter pub get &amp;&amp; flutter build web"</flutter-build-args>
             </properties>
         </profile>
     </profiles>
