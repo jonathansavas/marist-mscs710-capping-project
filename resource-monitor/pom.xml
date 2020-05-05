@@ -66,6 +66,9 @@
                             <goal>aggregate</goal>
                         </goals>
                         <phase>install</phase>
+                        <configuration>
+                            <notimestamp>true</notimestamp>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
