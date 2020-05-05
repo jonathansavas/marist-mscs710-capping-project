@@ -100,7 +100,7 @@ public class MetricsCollectorStarter {
   }
 
   private static void createTopic(AdminClient adminClient, String topic)
-    throws TimeoutException, InterruptedException, ExecutionException {
+    throws TimeoutException, InterruptedException, ExecutionException, TopicExistsException {
 
     NewTopic metricsTopic = new NewTopic(topic, 1, (short) 1);
 
