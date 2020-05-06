@@ -28,7 +28,7 @@ public class MetricsCollectorStarter {
   private static final String DEFAULT_TOPIC = "resource-monitor-metrics";
   private static final String DEFAULT_BROKER = "localhost:9092";
   private static final String RUNFILE = "./runfile.tmp";
-  private static final int LOG_RETENTION_HOURS = 0;
+  private static final int LOG_RETENTION_HOURS = 12;
 
   public static void main(String[] args) {
     Properties appProps = new Properties();
