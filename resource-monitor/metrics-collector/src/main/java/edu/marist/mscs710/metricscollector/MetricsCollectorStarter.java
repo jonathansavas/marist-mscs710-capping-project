@@ -11,10 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -31,7 +28,7 @@ public class MetricsCollectorStarter {
   private static final String DEFAULT_TOPIC = "resource-monitor-metrics";
   private static final String DEFAULT_BROKER = "localhost:9092";
   private static final String RUNFILE = "./runfile.tmp";
-  private static final int LOG_RETENTION_HOURS = 2;
+  private static final int LOG_RETENTION_HOURS = 0;
 
   public static void main(String[] args) {
     Properties appProps = new Properties();
@@ -56,10 +53,10 @@ public class MetricsCollectorStarter {
       if (! kafkaAdminClient.listTopics().names().get().contains(topic)) {
         createTopic(kafkaAdminClient, topic);
       }
-    } catch (TimeoutException | InterruptedException | ExecutionException e) {
+    } catch (TimeoutException | InterruptedException e) {
       LOGGER.error(e.getMessage(), e);
       return;
-    } catch (TopicExistsException ignored) {}
+    } catch (TopicExistsException | ExecutionException ignored) { }
 
     File runFile = new File(RUNFILE);
 
@@ -105,7 +102,7 @@ public class MetricsCollectorStarter {
     NewTopic metricsTopic = new NewTopic(topic, 1, (short) 1);
 
     Map<String, String> configs = metricsTopic.configs() == null ? new HashMap<>() : metricsTopic.configs();
-    configs.put(TopicConfig.RETENTION_MS_CONFIG, Long.toString(LOG_RETENTION_HOURS * 60 * 60 * 1000)); // Hours to MS
+    configs.put(TopicConfig.RETENTION_MS_CONFIG, Long.toString(LOG_RETENTION_HOURS * 60 * 60 * 1000 + 1)); // Hours to MS
     metricsTopic.configs(configs);
 
     CreateTopicsResult result = adminClient.createTopics(Collections.singletonList(metricsTopic));

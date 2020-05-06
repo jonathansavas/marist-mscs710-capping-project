@@ -115,6 +115,7 @@
                                 <copy todir="target/ui" overwrite="true">
                                     <fileset dir="${capping-project-dir}/capping-api-server">
                                         <include name="*.py"/>
+                                        <include name="requirements.txt"/>
                                         <exclude name="*test*"/>
                                     </fileset>
                                 </copy>
